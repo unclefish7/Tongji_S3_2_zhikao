@@ -1,0 +1,43 @@
+[
+  {
+    "username": "exampleUser",
+    "data": {
+      "type": "admin"
+    },
+    "salt": "ffeabbafe32a35e087a469c5a8f53353",
+    "hashedPassword": "826910e7d185881d7e28c0af7d0892eea01bf73280c97a0529af59ab3299938f724bb926982f6eefd5e6b2fa4c412ad9b48e3df38959dd9240e505ca7bd1a664"
+  },
+  {
+    "username": "user001",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年02月08日",
+      "createTimeStamp": 1739004484635,
+      "duration": "3"
+    },
+    "salt": "58515300ddc764df852614f4f8201b27",
+    "hashedPassword": "3aad2c45f8e662cc80abadc54f0c30003bd1dfd995ae67e9fdd9438f9872e3cebc5ccc7486f613f74b34b7649a0f86ef174132291791904d1af164844c78a59c"
+  },
+  {
+    "username": "admin001",
+    "data": {
+      "type": "admin",
+      "createDate": "2025年02月15日",
+      "createTimeStamp": 1739604505241,
+      "duration": ""
+    },
+    "salt": "cffd13be70912f0874e7604106ea27b8",
+    "hashedPassword": "350419ad6e1fc29d1127f4752854d4a463cee46ba8ddec8e9d9515ef9a55e2134f4cb7238da543ff61b6f8c97fdaa44a646ddec80b7b2e157d2dc561a7ae1a2b"
+  },
+  {
+    "username": "user002",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年02月16日",
+      "createTimeStamp": 1739711473112,
+      "duration": "7"
+    },
+    "salt": "1eeb1b25be95e697b439d7b5b29503d1",
+    "hashedPassword": "47132b5440daa50684078d5fbad9d8c55af278494ba33282933d495f6c74cc7fe0c38f0a0cdb63f50d57e6bf6d48c4ff59ae726b051633ea558ee01e837c0f60"
+  }
+]

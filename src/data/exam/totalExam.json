@@ -1,0 +1,30 @@
+[
+  {
+    "paperId": "053400paper1",
+    "name": "试卷校验测试",
+    "score": "100",
+    "department": "计算机科学与技术",
+    "duration": "1.5h"
+  },
+  {
+    "paperId": "053400paper2",
+    "name": "2023年研究生招生考试-计算机综合",
+    "score": "100",
+    "department": "计算机科学与技术学院",
+    "duration": "1.5h"
+  },
+  {
+    "paperId": "053400paper3",
+    "name": "2023年研究生招生考试-英语",
+    "score": "50",
+    "department": "计算机科学与技术学院",
+    "duration": "1.5h"
+  },
+  {
+    "paperId": "paper1739602434317",
+    "name": "2025年计算机科学与技术学院-计算机综合",
+    "score": "100",
+    "department": "计算机科学与技术学院",
+    "duration": "1h"
+  }
+]
