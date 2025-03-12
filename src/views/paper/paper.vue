@@ -30,8 +30,8 @@
                 icon="el-icon-info"
                 icon-color="red"
                 title="您确定删除吗？"
-                @OnConfirm="shanchu(scope.row.paperId)"
-                @confirm="shanchu(scope.row.paperId)"
+                @OnConfirm="deletePaper(scope.row.paperId)"
+                @confirm="deletePaper(scope.row.paperId)"
             >
               <el-button type="danger" style="margin-left: 10px" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
             </el-popconfirm>
@@ -124,8 +124,8 @@
         });        
       },
        methods: {
-        async shanchu(id) {
-          const result = await window.electronAPI.paper.shanchuPaper(id);
+        async deletePaper(id) {
+          const result = await window.electronAPI.paper.deletePaper(id);
             if (result.success) {
                  await this.getAllData();
             } else {

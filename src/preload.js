@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
+
 contextBridge.exposeInMainWorld('electronAPI', {
   node: () => process.versions.node,
   chrome: () => process.versions.chrome,
@@ -25,21 +26,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     //2.存储试卷信息，（不加密）
 
     //Question
-    addQuestion: addQuestion,
+    addQuestion: (filename, newQuestionData) => ipcRenderer.invoke('addQuestion', filename, newQuestionData),
     editQuestion: editQuestion,
-    readPaperFile: readPaperFile,
+    readPaperFile: (filename) => ipcRenderer.invoke('readPaperFile', filename),
     shanchuQuestion: shanchuQuestion,
 
     //Paper
     addPaper: addPaper,
-    editPaper: editPaper,
-    shanchuPaper: shanchuPaper,
+    editPaper: (paperId, updatedData) => ipcRenderer.invoke('editPaper', paperId, updatedData),
+    deletePaper: (paperId) => ipcRenderer.invoke('deletePaper', paperId),
 
   },
   curriculum: {
-    readTotalCurriculumFile: readTotalCurriculumFile,
-    readExamFile: readExamFile,
-    addCurriculum: addCurriculum,
+    readTotalCurriculumFile: () => ipcRenderer.invoke('readTotalCurriculumFile'),
+    readExamFile: () => ipcRenderer.invoke('readExamFile'),
+    addCurriculum: (newCurriculumData) => ipcRenderer.invoke('addCurriculum', newCurriculumData),
   },
   check: {
     generateExamPaper: generateExamPaper,
@@ -138,41 +139,6 @@ async function loginUser(username, password) {
   });
 }
 
-/**
-     * 
-     * @param {*} data
-     * 功能：要存储的内容
-     */
-async function saveRichTextData(filename, data) {
-    try {
-      const filePath = './src/data/paper/' + filename;
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Data saved successfully to', filePath);
-        return { success: true, message: 'Data saved successfully' };
-    } catch (error) {
-        console.error('Error saving data:', error);
-        return { success: false, message: 'Failed to save data' };
-    }
-}
-
-async function addQuestion(filename, newQuestionData) {
-  try {
-      let existingData = await readPaperFile(filename);
-      // 生成新的 id
-      let newId = 1;
-      if (existingData.length > 0) {
-          newId = existingData[existingData.length - 1].id + 1;
-      }
-      newQuestionData.id = newId;
-      existingData.push(newQuestionData);
-      return await saveRichTextData(filename, existingData);
-  } catch (error) {
-      console.error('Error adding question:', error);
-      return { success: false, message: 'Failed to add question' };
-  }
-}
-
-
 async function editQuestion(filename, id, updatedData) {
   try {
     console.log(filename)
@@ -212,18 +178,6 @@ async function shanchuQuestion(filename, questionId) {
     }
 }
 
-async function readPaperFile(filename) {
-    const filePath = './src/data/paper/' + filename;
-    try {
-        const fileContent = await fs.readFile(filePath, 'utf8');
-        const existingData = JSON.parse(fileContent);
-        return existingData;
-    } catch (err) {
-        console.error('读取文件或解析 JSON 时出错:', err);
-        return [];
-    }
-}
-
 /*
  * 添加试卷，主要工作有两个，一个是在课程文件中，添加该项试卷的信息；另一个是在存放试卷位置添加考卷文件
  *
@@ -251,145 +205,6 @@ async function addPaper(data) {
   } catch (error) {
       console.error('Error editing question:', error);
       return { success: false, message: 'Failed to edit question' };
-  }
-}
-
-/*
- * 读取总的考试文件，然后修改试卷的信息
- *
-*/
-async function editPaper(paperId, updatedData) {
-    try {
-        let existingData = await readExamFile();
-        const index = existingData.findIndex(item => item.paperId == paperId);
-        if (index!== -1) {
-            existingData[index] = {...existingData[index],...updatedData };
-            return await saveCurriculumData(existingData);
-        } else {
-            return { success: false, message: 'add with the given id not found' };
-        }
-    } catch (error) {
-        console.error('Error editing paper:', error);
-        return { success: false, message: 'Failed to edit paper' };
-    }
-}
-
-/*
- * 读取总的考试文件，然后删除某一份试卷的信息
- *
-*/
-async function shanchuPaper(paperId) {
-    try {
-        let existingData = await readExamFile();
-        const index = existingData.findIndex(item => item.paperId == paperId);
-        if (index!== -1) {
-            //删除某一个试卷
-            existingData.splice(index, 1);
-            //删除试卷对应的文件 fs.XX
-            const paperFilePath = './src/data/paper/' + paperId.toString() + '.json'
-            try {
-                await fs.unlink(paperFilePath);
-                console.log('Paper file deleted successfully');
-            } catch (fileError) {
-                console.error('Error deleting paper file:', fileError);
-            }
-            return await saveCurriculumData(existingData);
-        } else {
-            return { success: false, message: 'the given id not found' };
-        }
-    } catch (error) {
-        console.error('Error delete paper:', error);
-        return { success: false, message: 'Failed to delete paper' };
-    }
-}
-
-
-/*
- * 读取课程文件，读取相应的课程文件，获取到该课程下所有试卷信息
- *
-*/
-async function readExamFile() {
-  const filePath = './src/data/exam/totalExam.json';
-  try {
-      const fileContent = await fs.readFile(filePath, 'utf8');
-      const existingData = JSON.parse(fileContent);
-      return existingData;
-  } catch (err) {
-      console.error('读取文件或解析 JSON 时出错:', err);
-      return [];
-  }
-}
-
-/**
-     * 
-     * @param {*} data
-     * 功能：要存储的内容
-     */
-async function savetotalCurriculumData(data) {
-    try {
-        const filePath = './src/data/curriculum/totalCurriculum.json';
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Data saved successfully to', filePath);
-        return { success: true, message: 'Data saved successfully' };
-    } catch (error) {
-        console.error('Error saving data:', error);
-        return { success: false, message: 'Failed to save data' };
-    }
-}
-
-/**
-     * 
-     * @param {*} data
-     * 功能：要存储的内容
-     */
-async function saveCurriculumData(data) {
-    try {
-        const filePath = './src/data/exam/totalExam.json';
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Data saved successfully to', filePath);
-        return { success: true, message: 'Data saved successfully' };
-    } catch (error) {
-        console.error('Error saving data:', error);
-        return { success: false, message: 'Failed to save data' };
-    }
-}
-
-/*
- * 添加课程，主要工作有两个，一个是在课程总文件中，添加该项课程的信息；另一个是在存放课程位置添加新生成的课程文件
- *
-*/
-async function addCurriculum(newCurriculumData) {
-    try {
-        const curriculumId = newCurriculumData.id;
-        let existingData = await readTotalCurriculumFile();
-        existingData.push(newCurriculumData);
-        const result =  await savetotalCurriculumData(existingData);
-        if (result.success){
-            //生成文件
-            initContent = '[]';
-            const filepath = './src/data/curriculum/c' + curriculumId + '.json';
-            fs.writeFile(filepath, initContent, 'utf8');
-            return { success: true, message: 'Data saved successfully' };
-        }
-    } catch (error) {
-        console.error('Error adding question:', error);
-        return { success: false, message: 'Failed to add question' };
-    }
-}
-
-/*
- * 读取总课程文件，读取总的课程文件，获取到所有课程信息
- *
-*/
-async function readTotalCurriculumFile() {
-  const filePath = './src/data/curriculum/totalCurriculum.json';
-  try {
-      const fileContent = await fs.readFile(filePath, 'utf8');
-      const existingData = JSON.parse(fileContent);
-      return existingData;
-  } catch (err) {
-      console.error('读取文件或解析 JSON 时出错:', err);
-      return [];
   }
 }
 
