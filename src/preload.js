@@ -27,12 +27,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     //Question
     addQuestion: (filename, newQuestionData) => ipcRenderer.invoke('addQuestion', filename, newQuestionData),
-    editQuestion: editQuestion,
+    editQuestion: (filename, id, updatedData) => ipcRenderer.invoke('editQuestion', filename, id, updatedData),
     readPaperFile: (filename) => ipcRenderer.invoke('readPaperFile', filename),
-    shanchuQuestion: shanchuQuestion,
+    deleteQuestion: (filename, questionId) => ipcRenderer.invoke('deleteQuestion', filename, questionId),
 
     //Paper
-    addPaper: addPaper,
+    addPaper: (data) => ipcRenderer.invoke('addPaper', data),
     editPaper: (paperId, updatedData) => ipcRenderer.invoke('editPaper', paperId, updatedData),
     deletePaper: (paperId) => ipcRenderer.invoke('deletePaper', paperId),
 
@@ -137,75 +137,6 @@ async function loginUser(username, password) {
           }
       });
   });
-}
-
-async function editQuestion(filename, id, updatedData) {
-  try {
-    console.log(filename)
-      let existingData = await readPaperFile(filename);
-      const index = existingData.findIndex(item => item.id == id);
-      console.log(index)
-      if (index!== -1) {
-          existingData[index] = {...existingData[index],...updatedData };
-          return await saveRichTextData(filename, existingData);
-      } else {
-          return { success: false, message: 'Question with the given id not found' };
-      }
-  } catch (error) {
-      console.error('Error editing question:', error);
-      return { success: false, message: 'Failed to edit question' };
-  }
-}
-
-/*
- * 读取总的考试文件，然后删除某一份试卷的信息
- *
-*/
-async function shanchuQuestion(filename, questionId) {
-    try {
-        let existingData = await readPaperFile(filename);
-        const index = existingData.findIndex(item => item.id == questionId);
-        if (index!== -1) {
-            //删除id对应题目
-            existingData.splice(index, 1);
-            return await saveRichTextData(filename, existingData);
-        } else {
-            return { success: false, message: 'the given id not found' };
-        }
-    } catch (error) {
-        console.error('Error delete question:', error);
-        return { success: false, message: 'Failed to delete question' };
-    }
-}
-
-/*
- * 添加试卷，主要工作有两个，一个是在课程文件中，添加该项试卷的信息；另一个是在存放试卷位置添加考卷文件
- *
-*/
-async function addPaper(data) {
-  try {
-      let existingData = await readExamFile();
-      // 生成新的 id 以paper + 时间戳来命名
-      let newId = `paper${Date.now()}`;
-      //console.log(curriculumId)
-      //if (existingData.length > 0) {
-      //    newId = existingData[existingData.length - 1].id + 1;
-      //}
-      data.paperId = newId;
-      existingData.push(data);
-      const result =  await saveCurriculumData(existingData);
-      console.log(result)
-      if (result.success){
-        //生成文件
-        initContent = '[]';
-        const filepath = './src/data/paper/' + data.paperId +'.json';
-        fs.writeFile(filepath, initContent, 'utf8');
-        return { success: true, message: 'Data saved successfully' };
-      }
-  } catch (error) {
-      console.error('Error editing question:', error);
-      return { success: false, message: 'Failed to edit question' };
-  }
 }
 
 /*

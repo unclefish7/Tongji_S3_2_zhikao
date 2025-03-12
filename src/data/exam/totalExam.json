@@ -26,5 +26,12 @@
     "score": "100",
     "department": "计算机科学与技术学院",
     "duration": "1h"
+  },
+  {
+    "paperId": "paper1741781270646",
+    "name": "2026全国硕士研究生统一考试数学（一）",
+    "score": "150",
+    "department": "数学科学学院",
+    "duration": "3h"
   }
 ]

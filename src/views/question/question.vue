@@ -39,8 +39,8 @@
               icon="el-icon-info"
               icon-color="red"
               title="您确定删除吗？"
-              @OnConfirm="shanchu(scope.row.id)"
-              @confirm="shanchu(scope.row.id)"
+              @OnConfirm="deleteQuestion(scope.row.id)"
+              @confirm="deleteQuestion(scope.row.id)"
           >
             <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
           </el-popconfirm>
@@ -75,8 +75,8 @@
               icon="el-icon-info"
               icon-color="red"
               title="您确定删除吗？"
-              @OnConfirm="shanchu(scope.row.id)"
-              @confirm="shanchu(scope.row.id)"
+              @OnConfirm="deleteQuestion(scope.row.id)"
+              @confirm="deleteQuestion(scope.row.id)"
           >
             <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
           </el-popconfirm>
@@ -111,8 +111,8 @@
               icon="el-icon-info"
               icon-color="red"
               title="您确定删除吗？"
-              @OnConfirm="shanchu(scope.row.id)"
-              @confirm="shanchu(scope.row.id)"
+              @OnConfirm="deleteQuestion(scope.row.id)"
+              @confirm="deleteQuestion(scope.row.id)"
           >
             <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
           </el-popconfirm>
@@ -146,8 +146,8 @@
                 icon="el-icon-info"
                 icon-color="red"
                 title="您确定删除吗？"
-                @OnConfirm="shanchu(scope.row.id)"
-                @confirm="shanchu(scope.row.id)"
+                @OnConfirm="deleteQuestion(scope.row.id)"
+                @confirm="deleteQuestion(scope.row.id)"
             >
               <el-button type="danger" style="margin-left: 10px" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
             </el-popconfirm>
@@ -266,8 +266,8 @@ export default {
       this.$router.push({ path: '/editquestion', query: { paperId: this.paperId, questionId: questionId } });
     },
 
-    async shanchu(id) {
-      const result = await window.electronAPI.paper.shanchuQuestion(this.paperId +'.json', id);
+    async deleteQuestion(id) {
+      const result = await window.electronAPI.paper.deleteQuestion(this.paperId +'.json', id);
       if(result.success){
         await this.getAllData();
       }
