@@ -12,8 +12,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // 这里可以添加更多与用户相关的函数或变量
     getUserName: () => 'John Doe',
     getUserAge: () => 30,
-    registerUser: registerUser,
-    editUser: editUser,
+    registerUser: (username, password, data) => ipcRenderer.invoke('register-user', username, password, data),
+    editUser: (username, password, data) => ipcRenderer.invoke('edit-user', username, password, data),
     loginUser: loginUser,
     getUserInfo: getUserInfo
   },
@@ -70,100 +70,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
  */
 
 
- /**
-     * 
-     * @param {*} username 
-     * @param {*} password 
-     * 注册用户信息，加密后进行存储
-     */
-async function registerUser(username, password, data) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const iterations = 1000;
-  const keylen = 64;
-  const digest = 'sha512';
-  crypto.pbkdf2(password, salt, iterations, keylen, digest, async (err, derivedKey) => {
-    if (err) {
-        console.error('Error encrypting password:', err);
-        return;
-    }
-    const hashedPassword = derivedKey.toString('hex');
-    const userInfo = {
-        username: username,
-        data: data,
-        salt: salt,
-        hashedPassword: hashedPassword
-    };
-    const users = await readUserFile();
-    let userIndex = -1;
-
-    // 查找是否存在相同用户名的用户
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].username === username) {
-            userIndex = i;
-            break;
-        }
-    }
-
-    if (userIndex !== -1) {
-        // 如果存在相同用户名的用户，更新该用户的信息
-        console.log('Same username! User registered failed.');
-        return false
-    } else {
-        // 如果不存在相同用户名的用户，创建新用户
-        users.push(userInfo);
-        console.log('User registered successfully.');
-    }
-    await writeUserFile(users);
-    return true;
-});
-}
-
-
-/**
-     * 
-     * @param {*} username 
-     * @param {*} password 
-     * 修改用户信息，加密后进行存储
-     */
-async function editUser(username, password, data) {
-    const salt = crypto.randomBytes(16).toString('hex');
-    const iterations = 1000;
-    const keylen = 64;
-    const digest = 'sha512';
-    crypto.pbkdf2(password, salt, iterations, keylen, digest, async (err, derivedKey) => {
-      if (err) {
-          console.error('Error encrypting password:', err);
-          return;
-      }
-      const hashedPassword = derivedKey.toString('hex');
-      const userInfo = {
-          username: username,
-          data: data,
-          salt: salt,
-          hashedPassword: hashedPassword
-      };
-      const users = await readUserFile();
-      let userIndex = -1;
-
-    // 查找是否存在相同用户名的用户
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].username === username) {
-            userIndex = i;
-            break;
-        }
-    }
-    if (userIndex !== -1) {
-        // 如果存在相同用户名的用户，更新该用户的信息
-        users[userIndex] = userInfo;
-        await writeUserFile(users);
-    } else {
-        // 如果不存在相同用户名的用户，则修改失败
-        console.log('edit failed.');
-        return false
-    }
-    return true;
-  });
-  }
 
 async function getUserInfo() {
     const users = await readUserFile();

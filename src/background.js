@@ -4,6 +4,7 @@ import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path';
+import { handleAPI } from "./api/apiIndex.js"; // ✅ 统一加载 API
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -68,7 +69,7 @@ app.on('ready', async () => {
     }
   }
 
-  ipcMain.on('read-file-request', (event, filePath) => {
+  ipcMain.handle('read-file-request', (event, filePath) => {
     try {
         const data = fs.readFileSync(filePath, 'utf-8');
         event.reply('read-file-response', data);
@@ -77,7 +78,7 @@ app.on('ready', async () => {
         event.reply('read-file-response', null);
     }
   });
-  
+  handleAPI(ipcMain); // ✅ 初始化 API
   createWindow()
 })
 
