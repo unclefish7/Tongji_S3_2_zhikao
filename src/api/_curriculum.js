@@ -4,8 +4,8 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { saveTotalCurriculumData, readTotalCurriculumFile } from './utils';
-import { readExamFile } from './utils';
+import { saveTotalCurriculumData, readTotalCurriculumFile } from './_utils';
+import { readExamFile } from './_utils';
 
 export function handleCurriculumAPI(ipcMain) {
 

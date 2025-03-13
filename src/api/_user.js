@@ -4,7 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readUserFile, writeUserFile } from './utils';
+import { readUserFile, writeUserFile, findUserInfo } from './_utils';
 
 export function handleUserAPI(ipcMain) {
      /**
@@ -107,4 +107,37 @@ export function handleUserAPI(ipcMain) {
             return true;
         });
     });
+
+    ipcMain.handle('login-user', async (event, username, password) => {
+        const userInfo = await findUserInfo(username);
+        if (!userInfo) {
+            return { success: false, message: 'Invalid username' };
+        }
+        const iterations = 1000;
+        const keylen = 64;
+        const digest = 'sha512';
+        return new Promise((resolve, reject) => {
+            crypto.pbkdf2(password, userInfo.salt, iterations, keylen, digest, (err, derivedKey) => {
+                if (err) {
+                    console.error('Error encrypting password:', err);
+                    reject(err);
+                    return;
+                }
+                const hashedPassword = derivedKey.toString('hex');
+                if (userInfo.hashedPassword === hashedPassword) {
+                    resolve({ success: true, message: 'Login successful', user: { username: userInfo.username, userdata: userInfo.data} });
+                } else {
+                    resolve({ success: false, message: 'Invalid username or password' });
+                }
+            });
+        });
+    });
+
+    ipcMain.handle('get-user-info', async (event) => {   
+        const users = await readUserFile();
+        const newData = users.map(({ salt, hashedPassword, ...rest }) => rest);
+        return newData
+    });
+
+
 }

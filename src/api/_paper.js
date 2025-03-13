@@ -4,8 +4,8 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData } from './utils';
-import { readExamFile, saveExamData } from './utils';
+import { readPaperFile, saveRichTextData } from './_utils';
+import { readExamFile, saveExamData } from './_utils';
 
 export function handlePaperAPI(ipcMain) {
 
