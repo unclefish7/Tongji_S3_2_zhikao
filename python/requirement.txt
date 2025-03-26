@@ -1,0 +1,8 @@
+sentence-transformers
+transformers
+huggingface-hub
+tokenizers
+pyinstaller
+torch
+scipy
+numpy
