@@ -4,6 +4,7 @@ node_modules
 /python/build
 /python/dist
 /python/model
+/python/mac
 similarity_check_mac
 similarity_check.spec
 # dependencies
