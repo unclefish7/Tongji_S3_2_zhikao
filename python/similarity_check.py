@@ -1,5 +1,7 @@
 # Usage: python similarity_check.py --input checkinput.json --output checkoutput.json
 # Description: 计算文本相似度，输入输出文件格式为 JSON
+# 模型打包：模型保存后，在 python 目录下运行：pyinstaller --onefile --add-data "model;model" similarity_check.py
+# 把生成的 disk 中的 exe 文件拖到 python 目录中即可在程序中调用 (具体见_utils.js的 compareQuestionsAI 方法)
 
 import json
 import os

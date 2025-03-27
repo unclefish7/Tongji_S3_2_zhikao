@@ -119,9 +119,10 @@ export async function saveRichTextData(filename, data) {
 }
 
 // 封装 exec 为 Promise
-export function executePython(exePath, workingDir) {
+export function executePython(exePath, workingDir, inputFile, outputFile) {
     return new Promise((resolve, reject) => {
-        exec(exePath, { cwd: workingDir }, (error, stdout, stderr) => {
+        const command = `"${exePath}" --input "${inputFile}" --output "${outputFile}"`; // 拼接带参数的命令
+        exec(command, { cwd: workingDir }, (error, stdout, stderr) => {
             if (error) {
                 console.error(`执行 Python 程序时出错: ${error}`);
                 reject(error);
@@ -220,26 +221,29 @@ export async function compareQuestionsAI(filename) {
     // 将句子保存到 input.json 文件
     const inputData = { sentences };
     const inputJson = JSON.stringify(inputData);
-    fs.writeFile('./src/data/transformer/checkinput.json', inputJson);
-    
 
     // 构建绝对路径
-    const currentDir = __dirname;
-    //const exePath = path.join(currentDir, 'src', 'data', 'transformer', 'similarity_check.exe');
-    const exePath = "D:\\work_dir\\zhikao\\src\\data\\transformer\\similarity_check075.exe"
+    // const currentDir = __dirname;
+    const exePath = path.resolve(__dirname, "../python/similarity_check.exe");
+    const inputPath = path.resolve(__dirname, "../src/data/transformer/checkinput.json"); // 输入文件路径
+    const outputPath = path.resolve(__dirname, "../src/data/transformer/checkoutput.json"); // 输出文件路径
+
+    fs.writeFile(inputPath, inputJson);
     const workingDir = path.dirname(exePath);
+    
     //调用python然后返回
     try {
         // 执行 Python 程序
-        await executePython(exePath, workingDir);
+        // await executePython(exePath, workingDir);
+        await executePython(exePath, workingDir, inputPath, outputPath)
 
         let similarityQuestions = [];
         // 检查 output.json 文件是否存在
-        const outputFilePath = './src/data/transformer/checkoutput.json';
-        const readData = await fs.readFile(outputFilePath, 'utf8');
+        // const outputFilePath = './src/data/transformer/checkoutput.json';
+        const readData = await fs.readFile(outputPath, 'utf8');
         const similarityPairs = JSON.parse(readData);
 
-        for (const pair of similarityPairs) {
+        for (const pair of similarityPairs) { // 这里可以加一个按照相似度分数排序的方法
             const questionA = questions.find(q => extractTextFromRichText(q.richTextContent) === pair.textA);
             const questionB = questions.find(q => extractTextFromRichText(q.richTextContent) === pair.textB);
             const smData = {
