@@ -2,12 +2,23 @@
 # Description: 计算文本相似度，输入输出文件格式为 JSON
 # 模型打包：模型保存后，在 python 目录下运行：pyinstaller --onefile --add-data "model;model" similarity_check.py
 # 把生成的 disk 中的 exe 文件拖到 python 目录中即可在程序中调用 (具体见_utils.js的 compareQuestionsAI 方法)
-
+import torch
+import sys
 import json
 import os
-import sys
 import argparse
 from sentence_transformers import SentenceTransformer, util
+
+# print("Python 可执行路径:", sys.executable)
+# print("Torch 版本:", torch.__version__)
+# print("Torch 是否内置 CUDA:", torch.version.cuda)
+print("CUDA 是否可用:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("GPU 名称:", torch.cuda.get_device_name(0))
+else:
+    print("当前无法使用 CUDA，请检查是否为 GPU 版本 Torch，并正确安装驱动 & CUDA")
+
+
 
 def get_resource_path(relative_path):
     """
