@@ -5,6 +5,7 @@ node_modules
 /python/dist
 /python/model
 /python/mac
+/python/env_win
 similarity_check_mac
 similarity_check.spec
 # dependencies
