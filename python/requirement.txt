@@ -6,3 +6,4 @@ pyinstaller
 torch
 scipy
 numpy
+optimum

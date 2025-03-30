@@ -10,13 +10,13 @@ import argparse
 from sentence_transformers import SentenceTransformer, util
 
 # print("Python 可执行路径:", sys.executable)
-# print("Torch 版本:", torch.__version__)
+print("Torch 版本:", torch.__version__)
 # print("Torch 是否内置 CUDA:", torch.version.cuda)
-print("CUDA 是否可用:", torch.cuda.is_available())
-if torch.cuda.is_available():
-    print("GPU 名称:", torch.cuda.get_device_name(0))
-else:
-    print("当前无法使用 CUDA，请检查是否为 GPU 版本 Torch，并正确安装驱动 & CUDA")
+# print("CUDA 是否可用:", torch.cuda.is_available())
+# if torch.cuda.is_available():
+#     print("GPU 名称:", torch.cuda.get_device_name(0))
+# else:
+#     print("当前无法使用 CUDA，请检查是否为 GPU 版本 Torch，并正确安装驱动 & CUDA")
 
 
 
@@ -48,6 +48,8 @@ if not os.path.exists(input_path):
 
 # 加载本地模型
 model_path = get_resource_path("model")
+# model_path = get_resource_path("model_small")  # 小模型
+
 model = SentenceTransformer(model_path)
 
 # 读取题目内容
