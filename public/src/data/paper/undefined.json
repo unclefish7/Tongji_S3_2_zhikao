@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "type": "",
+    "richTextContent": "<p>123344</p>",
+    "score": 0
+  },
+  {
+    "id": 2,
+    "type": "",
+    "richTextContent": "<p>112334567dffgdd<span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"SSIM(x,y)=\\frac{\\left(2\\mu_x\\mu_y+c1\\right)\\left(\\sigma_{xy}+c2\\right)}\n{\\left(\\mu_x^2+\\mu_y^2+c1\\right)\\left(\\sigma_x^2+\\sigma_y^2+c2\\right)}\"></span></p>",
+    "score": 0
+  }
+]
