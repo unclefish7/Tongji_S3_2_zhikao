@@ -163,6 +163,9 @@
 <script>
 import Vue from 'vue';
 import VueModal from 'vue-modal-plugin';
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
+
 Vue.use(VueModal);
 
 export default {
@@ -203,7 +206,27 @@ export default {
       this.getAllData()
     });
   },
+
+  mounted() {
+    // 页面首次加载完，尝试渲染公式
+    this.renderFormulasInTable()
+  },
+  
   methods: {
+    renderFormulasInTable() {
+      this.$nextTick(() => {
+        const formulaSpans = document.querySelectorAll('[data-w-e-type="formula"]')
+        formulaSpans.forEach((span) => {
+          const latex = span.getAttribute('data-value')
+          if (latex && span.innerHTML.trim() === '') {
+            katex.render(latex, span, {
+              throwOnError: false,
+              displayMode: false,
+            })
+          }
+        })
+      })
+    },
 
     addquestion(){
       this.$router.push({ path: '/addquestion', query: { paperId: this.paperId} })
@@ -256,6 +279,9 @@ export default {
           }
         }
       this.score = score;
+      this.$nextTick(() => {
+        this.renderFormulasInTable()
+      })
     })
     .catch(error => {
         console.error('获取题目信息时出错:', error);
