@@ -29,11 +29,17 @@
           :defaultConfig="toolbarConfig" 
           :mode="mode" />
         <Editor 
-          style="height: 500px; overflow-y: hidden" 
+          style="height: 1000px; width: 800px; overflow-y: hidden" 
           v-model="valueHtml" 
           :defaultConfig="editorConfig" 
           :mode="mode" 
-          @onCreated="handleCreated"/>
+          @onCreated="handleCreated"
+          @onChange="handleChange"
+          @onDestroyed="handleDestroyed"
+          @onFocus="handleFocus"
+          @onBlur="handleBlur"
+          @customAlert="customAlert"
+          @customPaste="customPaste"/>
       </div>
     </el-form-item>
 
@@ -58,97 +64,66 @@
 
 <script>
 import axios from "axios"
-
 // 引入富文本编辑器CSS
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
-
+import kityformula from "@/components/kityformula";
 import { Boot } from '@wangeditor/editor'
 import formulaModule from '@wangeditor/plugin-formula'
-
-// 注册公式插件
-Boot.registerModule(formulaModule)
-
-import { onBeforeUnmount, ref, shallowRef, onMounted, watch, nextTick } from 'vue'
+import { onBeforeUnmount, ref, shallowRef, onMounted} from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-
-import katex from 'katex'
-import 'katex/dist/katex.min.css'
-
+import globalState from '@/globalState'
+import { getCurrentInstance } from 'vue'
 
 export default {
   components: { Editor, Toolbar },
   setup() {
     // 编辑器实例，必须用 shallowRef
     const editorRef = shallowRef()
-    const score = ref(0)
-    const type = ref('')
-
-
     // 内容 HTML
     const valueHtml = ref('<p>hello</p>')
-
-    const renderFormulas = () => {
-      nextTick(() => {
-        const formulaSpans = document.querySelectorAll('[data-w-e-type="formula"]')
-        formulaSpans.forEach(span => {
-          const latex = span.getAttribute('data-value')
-          if (latex && span.innerHTML.trim() === '') {
-            katex.render(latex, span, {
-              throwOnError: false,
-              displayMode: false,
-            })
-          }
-        })
-      })
-    }
+    const score = ref(0)
+    const { proxy } = getCurrentInstance()  // 获取 options API 中的 this
+    const isRegistered = globalState.isRegistered  // 直接引用，全局响应式绑定
+    console.log('是否注册:', isRegistered.value) // 读取值
 
     // 模拟 ajax 异步获取内容
     onMounted(() => {
-      // 获取完整题目信息（模拟从 electron 获取）
-      window.electronAPI.paper.readPaperFile(`${questionId.value}.json`).then(allQuestions => {
-        const current = allQuestions.find(q => q.id == questionId.value)
-        if (current) {
-          valueHtml.value = current.richTextContent || '<p></p>'
-          score.value = current.score || 0
-          type.value = current.type || ''
-        }
-        renderFormulas()
-      })
+      valueHtml.value = '<p>在此输入题目内容</p>'
+      if (!isRegistered.value) {
+        Boot.registerModule(formulaModule);
+        Boot.registerMenu(kityformula);
+        isRegistered.value = true; // 标记插件已经注册
+      }
     })
 
-
-    watch(valueHtml, () => {
-      renderFormulas()
-    })
-
-    //const toolbarConfig = {}
     const toolbarConfig = {
       insertKeys: {
-        index: 0, // 插入位置
-        keys: ['insertFormula'], // 插入公式按钮
-      },
+        index: 0,
+        keys: [
+          "insertFormula", // “插入公式”菜单
+          "kityFormula", // “编辑公式”菜单
+        ],
+      }
     }
     const editorConfig = {
-      placeholder: '请输入内容...',
-      MENU_CONF: {
-        uploadImage: {
-          server: '/api/upload',
+       placeholder: '请输入内容...',
+       MENU_CONF: {},
+    }
 
-          async customUpload(file, insertFn) {
-            // 获取文件地址
-            const filePath = file.path.replace(/\\/g, '/')
-            const result = await window.electronAPI.saveImage(filePath)
-            const url = `file:///${result}`
-            const alt = file.name
-            const href = url
-            insertFn(url, alt, href)
-          },
-        },
-      },
-      hoverbarKeys: {
-        formula: {
-          menuKeys: ['editFormula'], // 鼠标悬停公式时显示“编辑”按钮
-        },
+    editorConfig.MENU_CONF['uploadImage'] = {
+      server: '/api/upload',
+
+      async customUpload(file, insertFn) {      
+        // 获取文件地址
+        const filePath = file.path.replace(/\\/g, '/');
+        console.log(filePath)
+
+        const result = await window.electronAPI.saveImage(filePath);
+
+        const url = `file:///${result}`;
+        const alt = file.name;
+        const href = url;
+        insertFn(url, alt, href);
       },
     }
 
@@ -158,23 +133,66 @@ export default {
         if (editor == null) return
         editor.destroy()
     })
-
+    //
     const handleCreated = (editor) => {
-      editorRef.value = editor // 记录 editor 实例，重要！
-      renderFormulas()  // 添加这行
+      console.log("created", editor);
+      editorRef.value = editor; // 记录 editor 实例，重要！
+    };
+    const handleChange = (editor) => {
+      console.log("change:", editor.getHtml());
+    };
+    const handleDestroyed = (editor) => {
+      console.log("destroyed", editor);
+    };
+    const handleFocus = (editor) => {
+      console.log("focus", editor);
+    };
+    const handleBlur = (editor) => {
+      console.log("blur", editor);
+    };
+    const customAlert = (info, type) => {
+      alert(`【自定义提示】${type} - ${info}`);
+    };
+    const customPaste = (editor, event, callback) => {
+      console.log("ClipboardEvent 粘贴事件对象", event);
+
+    // 自定义插入内容
+      editor.insertText("xxx");
+
+    // 返回值（注意，vue 事件的返回值，不能用 return）
+      callback(false); // 返回 false ，阻止默认粘贴行为
+    };
+    
+    // 获取 editor 数据，
+    const getEditorContent = () => {
+      const editor = editorRef.value;    
+      if (editor) {
+        const richText = editor.getHtml();
+        const data = {
+          "id": proxy.questionId, 
+          "type": proxy.type,
+          "richTextContent": richText,
+          "score": proxy.score
+        };
+        return data
+      }
+      else{
+        console.log("no instance")
+      }
     }
+
     return {
       editorRef,
       valueHtml,
-      score,
-      type,
-      mode: 'default',
+      mode: 'default', // 或 'simple'
       toolbarConfig,
       editorConfig,
       handleCreated,
-      valueHtml: '<p></p>',
-    }
+      getEditorContent,
+      isRegistered
+    };
   },
+
   data() {
     return {
       score: 0,
@@ -183,54 +201,43 @@ export default {
       type: ""
     };
   },
+
   created() {
-      this.paperId = this.$route.query.paperId
-      this.questionId = this.$route.query.questionId
-      // 加载当前试卷文件
-      window.electronAPI.paper.readPaperFile(this.paperId + '.json')
-        .then(allQuestions => {
-          const current = allQuestions.find(q => q.id == this.questionId)
-          if (current) {
-            // 赋值原题目信息
-            this.score = current.score || 0
-            this.type = current.type || ''
-            this.valueHtml = current.richTextContent || '<p></p>'
-          }
-        })
-        .catch(err => {
-          console.error('加载题目失败：', err)
-        })
+    this.paperId = this.$route.query.paperId
+    this.questionId = this.$route.query.questionId
   },
+
   methods: {
-    getEditorContent() {
-      const editor = this.editorRef
-      if (editor) {
-        const richText = editor.getHtml()
-        return {
-          id: this.questionId,
-          richTextContent: richText,
-          score: this.score,
-          type: this.type
-        }
-      } else {
-        console.log("no editor instance")
-        return null
-      }
+    backPage(){
+      this.$router.back();
     },
+    onCreated(editor) {
+      console.log("created", editor);
+      this.editor = Object.seal(editor); // 【注意】一定要用 Object.seal() 否则会报错
+    },
+    onChange(editor) {
+      console.log("onChange", editor.getHtml()); // onChange 时获取编辑器最新内容
+    },
+    handleFocus(editor) {
+      console.log("focus", editor);
+    },
+    getEditorText() {
+      const editor = this.editor;
+      if (editor == null) return;
 
+      console.log(editor.getText()); // 执行 editor API
+    },
+    printEditorHtml() {
+      const editor = this.editor;
+      if (editor == null) return;
+      console.log(editor.getHtml()); // 执行 editor API
+    },
     saveEditroContent() {
-      const data = this.getEditorContent()
-      if (!data) return
-      const result = window.electronAPI.paper.editQuestion(
-        this.paperId + '.json',
-        this.questionId,
-        data
-      )
+      var data = this.getEditorContent()
+      data.score = this.score
+      data.type = this.type
+      const result = window.electronAPI.paper.editQuestion(this.paperId +'.json', this.questionId, data)
       console.log(result)
-    },
-
-    backPage() {
-      this.$router.back()
     }
   }
 }
@@ -240,11 +247,10 @@ export default {
 .custom-editor {
   border: 1px solid #ccc;
   width: 60%; /* 调整宽度为 80% */
-  height: 600px;
-  margin: 50px left; /* 调整上下边距为 50px，左右自动居中 */
+  height: 800px;
+  margin: 40px left; /* 调整上下边距为 50px，左右自动居中 */
 }
 .custom-editor.ck-editor__main {
   height: 40vh; /* 设置高度为视口高度的 50% */
 }
-
 </style>
