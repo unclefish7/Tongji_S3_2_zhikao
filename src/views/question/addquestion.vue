@@ -10,10 +10,10 @@
 
     <el-form-item label="题目类型" prop="type" style="margin-left:30%;margin-top:20px">
         <el-select v-model="type">
-            <el-option label="选择题" value="选择题"></el-option>
-            <el-option label="判断题" value="判断题"></el-option>
-            <el-option label="填空题" value="填空题"></el-option>
-            <el-option label="主观题" value="主观题"></el-option>
+          <el-option label="选择题" value="选择题"></el-option>
+          <el-option label="判断题" value="判断题"></el-option>
+          <el-option label="填空题" value="填空题"></el-option>
+          <el-option label="主观题" value="主观题"></el-option>
         </el-select>
     </el-form-item>
 
@@ -25,11 +25,18 @@
           :defaultConfig="toolbarConfig" 
           :mode="mode" />
         <Editor 
-          style="height: 500px; overflow-y: hidden" 
+          style="height: 800px;width: 800px; overflow-y: hidden" 
           v-model="valueHtml" 
           :defaultConfig="editorConfig" 
           :mode="mode" 
-          @onCreated="handleCreated"/>
+          @onCreated="handleCreated"
+          @onChange="handleChange"
+          @onDestroyed="handleDestroyed"
+          @onFocus="handleFocus"
+          @onBlur="handleBlur"
+          @customAlert="customAlert"
+          @customPaste="customPaste"
+          />
       </div>
     </el-form-item>
 
@@ -55,26 +62,43 @@
 <script>
 // 引入富文本编辑器CSS
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
-
+import kityformula from "@/components/kityformula";
+import { Boot } from "@wangeditor/editor";
+import formulaModule from "@wangeditor/plugin-formula";
 import { onBeforeUnmount, ref, shallowRef, onMounted } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { Message } from 'element-ui';
+import globalState from '@/globalState'
 
 export default {
   components: { Editor, Toolbar },
   setup() {
     // 编辑器实例，必须用 shallowRef
     const editorRef = shallowRef()
-
     // 内容 HTML
     const valueHtml = ref('<p>hello</p>')
-
+    const isRegistered = globalState.isRegistered  // 直接引用，全局响应式绑定
+    console.log('是否注册:', isRegistered.value) // 读取值
     // 模拟 ajax 异步获取内容
+
     onMounted(() => {
-        valueHtml.value = '<p>在此输入题目内容</p>'
+      valueHtml.value = '<p>在此输入题目内容</p>'
+      if (!isRegistered.value) {
+        Boot.registerModule(formulaModule);
+        Boot.registerMenu(kityformula);
+        isRegistered.value = true; // 标记插件已经注册
+      }
     })
 
-    const toolbarConfig = {}
+    const toolbarConfig = {
+      insertKeys: {
+        index: 0,
+        keys: [
+          "insertFormula", // “插入公式”菜单
+          "kityFormula", // “编辑公式”菜单
+        ],
+      }
+
+    }
     const editorConfig = {
        placeholder: '请输入内容...',
        MENU_CONF: {},
@@ -82,19 +106,15 @@ export default {
 
     editorConfig.MENU_CONF['uploadImage'] = {
       server: '/api/upload',
-
       async customUpload(file, insertFn) {      
         // 获取文件地址
         const filePath = file.path.replace(/\\/g, '/');
         console.log(filePath)
-
         const result = await window.electronAPI.saveImage(filePath);
-
         const url = `file:///${result}`;
         const alt = file.name;
         const href = url;
         insertFn(url, alt, href);
-
         //insertFn(result.url, result.alt, result.href)
       },
     }
@@ -105,11 +125,43 @@ export default {
         if (editor == null) return
         editor.destroy()
     })
-
+    
     const handleCreated = (editor) => {
-      editorRef.value = editor // 记录 editor 实例，重要！
-    }
+      console.log("created", editor);
+      editorRef.value = editor; // 记录 editor 实例，重要！
+    };
+    
+    const handleChange = (editor) => {
+      console.log("change:", editor.getHtml());
+    };
+    
+    const handleDestroyed = (editor) => {
+      console.log("destroyed", editor);
+    };
+    
+    const handleFocus = (editor) => {
+      console.log("focus", editor);
+    };
+    
+    const handleBlur = (editor) => {
+      console.log("blur", editor);
+    };
+    
+    const customAlert = (info, type) => {
+      alert(`【自定义提示】${type} - ${info}`);
+    };
+    
+    const customPaste = (editor, event, callback) => {
+      console.log("ClipboardEvent 粘贴事件对象", event);
 
+    // 自定义插入内容
+      editor.insertText("xxx");
+
+    // 返回值（注意，vue 事件的返回值，不能用 return）
+      callback(false); // 返回 false ，阻止默认粘贴行为
+    // callback(true) // 返回 true ，继续默认的粘贴行为
+    };
+    
     // 获取 editor 数据，
     const getEditorContent = () => {
       const editor = editorRef.value;    
@@ -135,7 +187,8 @@ export default {
       toolbarConfig,
       editorConfig,
       handleCreated,
-      getEditorContent
+      getEditorContent,
+      isRegistered
     };
   },
   data() {
@@ -146,12 +199,35 @@ export default {
     };
   },
   created() {
-      this.paperId = this.$route.query.paperId
+    
+    this.paperId = this.$route.query.paperId
   },
 
   methods: {
     backPage(){
       this.$router.back();
+    },
+    onCreated(editor) {
+      console.log("created", editor);
+      this.editor = Object.seal(editor); // 【注意】一定要用 Object.seal() 否则会报错
+    },
+    onChange(editor) {
+      console.log("onChange", editor.getHtml()); // onChange 时获取编辑器最新内容
+    },
+    handleFocus(editor) {
+      console.log("focus", editor);
+    },
+    getEditorText() {
+      const editor = this.editor;
+      if (editor == null) return;
+
+      console.log(editor.getText()); // 执行 editor API
+    },
+    printEditorHtml() {
+      const editor = this.editor;
+      if (editor == null) return;
+
+      console.log(editor.getHtml()); // 执行 editor API
     },
     saveEditroContent(){
       var data = this.getEditorContent()
