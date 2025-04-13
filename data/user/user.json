@@ -20,7 +20,11 @@
       "duration": "14"
     },
     "salt": "5943a4cd3aa3993d01ded1ba5d3ae16b",
-    "hashedPassword": "44485d910ee50c7f7abb8c47d79e7e5dbff7d6305260c3fa3f97df5083f42437c6262a67f0ca77d4beba8f0aa17c8541f69b84e3877c9ee2417dd4ad07202c58"
+    "hashedPassword": "44485d910ee50c7f7abb8c47d79e7e5dbff7d6305260c3fa3f97df5083f42437c6262a67f0ca77d4beba8f0aa17c8541f69b84e3877c9ee2417dd4ad07202c58",
+    "papers_distributed": [
+      "053400paper1",
+      "053400paper2"
+    ]
   },
   {
     "username": "user004",
@@ -31,6 +35,9 @@
       "duration": "3"
     },
     "salt": "15f267c1a20abf88ca0061359663dbf9",
-    "hashedPassword": "274cf6b6b71d7a576c13010d8d696fc5a2697094c85ac520848a249bd26d1060a114c9492851387b4cb76f0e6b6e93c5b76ac2a9d2641295347a26fdb52fb176"
+    "hashedPassword": "274cf6b6b71d7a576c13010d8d696fc5a2697094c85ac520848a249bd26d1060a114c9492851387b4cb76f0e6b6e93c5b76ac2a9d2641295347a26fdb52fb176",
+    "papers_distributed": [
+      "053400paper1"
+    ]
   }
 ]

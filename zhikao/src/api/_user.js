@@ -8,12 +8,6 @@ import { readUserFile, writeUserFile, findUserInfo } from './_utils';
 
 
 export function handleUserAPI(ipcMain) {
-     /**
-     * 
-     * @param {*} username 
-     * @param {*} password 
-     * 注册用户信息，加密后进行存储
-     */
     ipcMain.handle('register-user', async (event, username, password, data) => {
         const salt = crypto.randomBytes(16).toString('hex');
         const iterations = 1000;
@@ -57,17 +51,6 @@ export function handleUserAPI(ipcMain) {
         });
     });
 
-    /**
-     *  
-     * @param {*} username
-     * @param {*} password
-     * 登录验证，验证用户名和密码是否匹配
-     * 
-     * 返回值：
-     * 0：用户名不存在
-     * 1：密码错误
-     * 2：登录成功
-     */
     ipcMain.handle('edit-user', async (event, username, password) => {
         const iterations = 1000;
         const keylen = 64;
@@ -110,6 +93,8 @@ export function handleUserAPI(ipcMain) {
             return { success: false, message: 'User not found' };
         }
     });
+
+    
 
     ipcMain.handle('login-user', async (event, username, password) => {
         const userInfo = await findUserInfo(username);

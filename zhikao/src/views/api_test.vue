@@ -82,6 +82,11 @@
             inputs: [""],
             placeholders: ["试卷ID"]
           },
+          updatePaperPermissions: {
+            fn: window.electronAPI.paper.updatePaperPermissions,
+            inputs: ["", "[]"],
+            placeholders: ["试卷ID", "用户名列表(JSON格式)"]
+          },
   
           readTotalCurriculumFile: { fn: window.electronAPI.curriculum.readTotalCurriculumFile, inputs: [], placeholders: [] },
           readExamFile: { fn: window.electronAPI.curriculum.readExamFile, inputs: [], placeholders: [] },
@@ -181,4 +186,3 @@
     margin-bottom: 20px;
   }
   </style>
-  
