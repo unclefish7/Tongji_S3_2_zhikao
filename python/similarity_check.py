@@ -7,62 +7,72 @@ import json
 import os
 import sys
 import argparse
-from sentence_transformers import SentenceTransformer, util
+import numpy as np
+from onnxruntime import InferenceSession
+from transformers import AutoTokenizer
+from scipy.spatial.distance import cosine
 
 def get_resource_path(relative_path):
-    """
-    获取资源路径：
-    - 打包后，从临时解包目录 `_MEIPASS` 查找；
-    - 普通运行时，从脚本文件所在目录查找；
-    """
     try:
         base_path = sys._MEIPASS
     except AttributeError:
         base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
 
-# 命令行参数
+# 命令行参数解析
 parser = argparse.ArgumentParser(description="Similarity Checker")
-parser.add_argument('--input', required=True, help='输入文件路径，例如 checkinput.json')
-parser.add_argument('--output', required=True, help='输出文件路径，例如 checkoutput.json')
+parser.add_argument('--input', required=True)
+parser.add_argument('--output', required=True)
 args = parser.parse_args()
 
-# 读取输入文件
-input_path = os.path.abspath(args.input)
-output_path = os.path.abspath(args.output)
+# 加载ONNX模型和tokenizer
+model_dir = get_resource_path("onnx_model")
+tokenizer = AutoTokenizer.from_pretrained(model_dir)
+session = InferenceSession(
+    os.path.join(model_dir, "text2vec.onnx"),
+    providers=["CPUExecutionProvider"]  # 强制使用CPU提高兼容性
+)
 
-if not os.path.exists(input_path):
-    print(f"❌ 输入文件不存在：{input_path}")
-    sys.exit(1)
+# 编码函数（模仿sentence-transformers的encode行为）
+def encode(texts):
+    inputs = tokenizer(
+        texts,
+        padding=True,
+        truncation=True,
+        return_tensors="np",
+        max_length=128  # 限制最大长度
+    )
+    outputs = session.run(
+        None,
+        {
+            "input_ids": inputs["input_ids"],
+            "attention_mask": inputs["attention_mask"]
+        }
+    )
+    # 取CLS向量作为句向量
+    embeddings = outputs[0][:, 0]
+    return embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)  # 归一化
 
-# 加载本地模型
-model_path = get_resource_path("model")
-model = SentenceTransformer(model_path)
-
-# 读取题目内容
-with open(input_path, 'r', encoding='utf-8') as f:
+# 主逻辑
+with open(args.input, 'r', encoding='utf-8') as f:
     data = json.load(f)
 sentences = data.get("sentences", [])
 
-# 编码为向量
-embeddings = model.encode(sentences, convert_to_tensor=True)
-
-# 相似度矩阵计算
+embeddings = encode(sentences)
 similarity_results = []
-threshold = 0.65  # 相似度阈值
+threshold = 0.65
 
 for i in range(len(sentences)):
-    for j in range(i + 1, len(sentences)):
-        score = util.cos_sim(embeddings[i], embeddings[j]).item()
+    for j in range(i+1, len(sentences)):
+        score = 1 - cosine(embeddings[i], embeddings[j])
         if score >= threshold:
             similarity_results.append({
                 "textA": sentences[i],
                 "textB": sentences[j],
-                "score": round(score, 4)
+                "score": round(float(score), 4)
             })
 
-# 写入输出文件
-with open(output_path, 'w', encoding='utf-8') as f:
+with open(args.output, 'w', encoding='utf-8') as f:
     json.dump(similarity_results, f, ensure_ascii=False, indent=2)
 
-print(f"相似度计算完成，输出结果保存在：{output_path}")
+print(f"结果已保存至 {args.output}")

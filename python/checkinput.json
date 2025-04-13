@@ -1,12 +1,1 @@
-{
-  "sentences": [
-    "世界上最大的哺乳动物是什么？",
-    "哪种动物体型最大，是哺乳动物？",
-    "计算机的五大基本组成部分是什么？",
-    "计算机系统由哪几部分组成？",
-    "下面哪项不属于操作系统的功能？",
-    "判断题：Python 是一种解释型语言。",
-    "填空题：TCP/IP 协议中，___ 用于传输网页数据。",
-    "选择题：以下哪个协议用于电子邮件的发送？A.SMTP B.HTTP C.FTP D.TCP"
-  ]
-}
+{"sentences":["集合的并集运算满足交换律","集合的交集运算满足交换律","图的邻接矩阵是对称矩阵","哈密顿回路不一定是欧拉回路","哈密顿回路一定是欧拉回路","<span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">在一个代数系统 < S, </span><span style=\"color: initial; background-color: rgb(255, 255, 255); font-size: 16px;\"><em>> 中，S={a, b, c}，</em></span><span style=\"color: initial; background-color: rgb(255, 255, 255); font-size: 16px;\">二元运算</span><span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">的运算表如下：</span>\n<span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。</span>\n<br>","在一个代数系统 < S, > 中，S={a, b, c}，二元运算的运算表如下：\n 求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。"]}

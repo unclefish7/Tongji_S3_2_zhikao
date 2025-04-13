@@ -5,6 +5,8 @@ node_modules
 /python/dist
 /python/model
 /python/mac
+/python
+/src/data/transfomer/checkoutput.json
 similarity_check_mac
 similarity_check.spec
 # dependencies

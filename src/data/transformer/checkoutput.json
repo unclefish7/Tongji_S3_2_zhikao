@@ -2,26 +2,21 @@
   {
     "textA": "集合的并集运算满足交换律",
     "textB": "集合的交集运算满足交换律",
-    "score": 0.9696
+    "score": 0.9851
   },
   {
     "textA": "集合的并集运算满足交换律",
     "textB": "在一个代数系统 < S, > 中，S={a, b, c}，二元运算的运算表如下：\n 求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。",
-    "score": 0.6721
+    "score": 0.6539
   },
   {
     "textA": "集合的交集运算满足交换律",
     "textB": "在一个代数系统 < S, > 中，S={a, b, c}，二元运算的运算表如下：\n 求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。",
-    "score": 0.676
+    "score": 0.6583
   },
   {
     "textA": "哈密顿回路不一定是欧拉回路",
     "textB": "哈密顿回路一定是欧拉回路",
-    "score": 0.952
-  },
-  {
-    "textA": "<span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">在一个代数系统 < S, </span><span style=\"color: initial; background-color: rgb(255, 255, 255); font-size: 16px;\"><em>> 中，S={a, b, c}，</em></span><span style=\"color: initial; background-color: rgb(255, 255, 255); font-size: 16px;\">二元运算</span><span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">的运算表如下：</span>\n<span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。</span>\n<br>",
-    "textB": "在一个代数系统 < S, > 中，S={a, b, c}，二元运算的运算表如下：\n 求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。",
-    "score": 0.6779
+    "score": 0.9367
   }
 ]
