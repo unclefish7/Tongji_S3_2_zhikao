@@ -1,0 +1,65 @@
+[
+  {
+    "username": "exampleUser",
+    "data": {
+      "type": "admin"
+    },
+    "salt": "ffeabbafe32a35e087a469c5a8f53353",
+    "hashedPassword": "826910e7d185881d7e28c0af7d0892eea01bf73280c97a0529af59ab3299938f724bb926982f6eefd5e6b2fa4c412ad9b48e3df38959dd9240e505ca7bd1a664"
+  },
+  {
+    "username": "user001",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年02月08日",
+      "createTimeStamp": 1739004484635,
+      "duration": "14"
+    },
+    "salt": "a1a0e69665593bca15d58ce1544a8466",
+    "hashedPassword": "adeeabdb0ce990db4662a96d438fcfeef8d9ffa61eb35b6b7ad40f34387a0b37845e6057d4f6f1be0a12bddefc0c39a0471364a0551970f804df36962c15c1ad"
+  },
+  {
+    "username": "admin001",
+    "data": {
+      "type": "admin",
+      "createDate": "2025年02月15日",
+      "createTimeStamp": 1739604505241,
+      "duration": ""
+    },
+    "salt": "cffd13be70912f0874e7604106ea27b8",
+    "hashedPassword": "350419ad6e1fc29d1127f4752854d4a463cee46ba8ddec8e9d9515ef9a55e2134f4cb7238da543ff61b6f8c97fdaa44a646ddec80b7b2e157d2dc561a7ae1a2b"
+  },
+  {
+    "username": "user002",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年02月16日",
+      "createTimeStamp": 1739711473112,
+      "duration": "7"
+    },
+    "salt": "1eeb1b25be95e697b439d7b5b29503d1",
+    "hashedPassword": "47132b5440daa50684078d5fbad9d8c55af278494ba33282933d495f6c74cc7fe0c38f0a0cdb63f50d57e6bf6d48c4ff59ae726b051633ea558ee01e837c0f60"
+  },
+  {
+    "username": "user003",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年03月09日",
+      "createTimeStamp": 1741499575507,
+      "duration": "14"
+    },
+    "salt": "694c9134ca3f0c108bd90bbffe4a954f",
+    "hashedPassword": "86b2ea16b396b4642d1a3fb6da793431eb3b3780d0cc16b19eb4554683980370197fff3e80af17189f4ac9937533bdbbcb1fd14e40fac7d6c0fe88160bff4222"
+  },
+  {
+    "username": "user004",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年03月12日",
+      "createTimeStamp": 1741761554918,
+      "duration": "3"
+    },
+    "salt": "15f267c1a20abf88ca0061359663dbf9",
+    "hashedPassword": "274cf6b6b71d7a576c13010d8d696fc5a2697094c85ac520848a249bd26d1060a114c9492851387b4cb76f0e6b6e93c5b76ac2a9d2641295347a26fdb52fb176"
+  }
+]
