@@ -44,7 +44,7 @@
             // 等数据拿到后再处理 userList
             this.userList = this.users.map(user => ({
                 ...user,
-                checked: user.paperPermissions?.includes(this.paperId), // 真实判断是否勾选
+                checked: user.papers_distributed?.includes(this.paperId), // 真实判断是否勾选
             }));
 
             console.log('处理后的用户列表:', this.userList);
@@ -59,7 +59,7 @@
         const selectedUserIds = this.userList
           .filter(user => user.checked)
           .map(user => user.id)
-  
+
         console.log('需要赋权的用户ID：', selectedUserIds)
         // 👉 调用 API 保存权限信息
         // savePermissionAPI(this.paperId, selectedUserIds).then(...)
