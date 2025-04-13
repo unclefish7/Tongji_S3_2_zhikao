@@ -1,0 +1,12 @@
+{
+    "users": [
+    {
+        "username": "user1",
+        "passwordHash": "哈希值1"
+    },
+    {
+        "username": "user2",
+        "passwordHash": "哈希值2"
+    }
+    ]
+}
