@@ -75,7 +75,7 @@
           "duration": this.ruleForm.duration
         }
         console.log(data)
-        const result = await window.electronAPI.user.editUser(this.ruleForm.name, this.ruleForm.password)
+        await window.electronAPI.user.editUser(this.ruleForm.name, this.ruleForm.password)
       },
       backPage(){
         this.$router.back();

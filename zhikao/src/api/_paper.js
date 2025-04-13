@@ -4,9 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData } from './_utils';
-import { readExamFile, saveExamData } from './_utils';
-import { readUserFile, writeUserFile } from './_utils'; // 引入 readUserFile 和 writeUserFile 函数
+import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile } from './_utils'; // Consolidated imports
 
 export function handlePaperAPI(ipcMain) {
 
