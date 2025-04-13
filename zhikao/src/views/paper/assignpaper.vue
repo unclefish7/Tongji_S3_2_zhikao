@@ -39,8 +39,10 @@
         // 👇 替换为实际 API 请求
         window.electronAPI.user.getUserInfo()
         .then(allUsers => {
-            this.users = allUsers;
-
+            // this.users = allUsers;
+            // 先过滤掉 admin 用户
+            const filteredUsers = allUsers.filter(user => user.data.type !== 'admin');
+            this.users = filteredUsers;
             // 等数据拿到后再处理 userList
             this.userList = this.users.map(user => ({
                 ...user,
@@ -55,15 +57,24 @@
       },
   
       // 保存权限变更
-      savePermissions() {
-        const selectedUserIds = this.userList
+      async savePermissions() {
+        const selectedUserNames = this.userList
           .filter(user => user.checked)
-          .map(user => user.id)
+          .map(user => user.username)
 
-        console.log('需要赋权的用户ID：', selectedUserIds)
-        // 👉 调用 API 保存权限信息
-        // savePermissionAPI(this.paperId, selectedUserIds).then(...)
-        this.$message.success('权限已保存')
+        console.log('需要赋权的用户ID：', selectedUserNames)
+
+        try {
+          const result = await window.electronAPI.paper.updatePaperPermissions(this.paperId, selectedUserNames)
+          if (result.success) {
+            this.$message.success('权限已保存')
+          } else {
+            this.$message.error('权限保存失败：' + result.message)
+          }
+        } catch (error) {
+          console.error(error)
+          this.$message.error('权限保存出错')
+        }
       },
   
       backPage() {
