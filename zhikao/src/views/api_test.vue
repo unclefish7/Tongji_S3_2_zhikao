@@ -147,7 +147,7 @@
         }
       },
       goBack() {
-        this.$router.push('/login');
+        this.$router.push('/');
       }
     },
   }
