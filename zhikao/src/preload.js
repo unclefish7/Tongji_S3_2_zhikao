@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getUserName: () => 'John Doe',
     getUserAge: () => 30,
     registerUser: (username, password, data) => ipcRenderer.invoke('register-user', username, password, data),
-    editUser: (username, password, data) => ipcRenderer.invoke('edit-user', username, password, data),
+    editUser: (username, password, data) => ipcRenderer.invoke('edit-user', username, password),
     loginUser: (username, password) => ipcRenderer.invoke('login-user', username, password),
     getUserInfo: () => ipcRenderer.invoke('get-user-info'),
     
