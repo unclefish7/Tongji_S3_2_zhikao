@@ -74,7 +74,7 @@ export function handleCheckAPI(ipcMain) {
             };
             let sectionNumber = 1;
     
-            titleParaFont = ["零", "一", "二", "三", "四"]
+            const titleParaFont = ["零", "一", "二", "三", "四"];
             
             //为每个题型生成word文档
             for (const [type, questionList] of Object.entries(questionTypeMap)) {
