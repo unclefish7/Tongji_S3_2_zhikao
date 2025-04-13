@@ -55,6 +55,11 @@ const routes = [
         component: () => import('@/views/paper/editpaper.vue'),
       },
       {
+        path: '/assignpaper',
+        name: 'assignpaper',
+        component: () => import('@/views/paper/assignpaper.vue'),
+      },
+      {
         path: '/checkpaper',
         name: 'checkpaper',
         component: () => import('@/views/paper/check.vue'),
