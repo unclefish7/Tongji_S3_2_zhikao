@@ -91,7 +91,11 @@ const routes = [
     name: 'Login',
     component: ()=>import('@/views/user/login.vue')
   },
-  
+  {
+    path: '/api-test',
+    name: 'ApiTest',
+    component: () => import('@/views/api_test.vue') // 替换为你的实际文件路径
+  }
 ]
 
 const router = new VueRouter({
