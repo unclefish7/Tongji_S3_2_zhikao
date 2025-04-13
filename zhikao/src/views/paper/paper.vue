@@ -1,6 +1,9 @@
 <template>
   <el-main>
-    <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
+    <template v-if="userType === 'admin'">
+      <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
+    </template>
+    
       <el-form :model="userForm" size="mini" label-width="80px">
     </el-form>
     <!--表格
@@ -23,22 +26,26 @@
           </el-table-column>
           <el-table-column label="操作" width="400" >
           <template v-slot="scope">
-            <el-popconfirm
-                class="ml-5"
-                confirm-button-text='确定'
-                cancel-button-text='我再想想'
-                icon="el-icon-info"
-                icon-color="red"
-                title="您确定删除吗？"
-                @OnConfirm="deletePaper(scope.row.paperId)"
-                @confirm="deletePaper(scope.row.paperId)"
-            >
-              <el-button type="danger" style="margin-left: 10px" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
-            </el-popconfirm>
+            <template v-if="userType === 'admin'">
+              <el-popconfirm
+                  class="ml-5"
+                  confirm-button-text='确定'
+                  cancel-button-text='我再想想'
+                  icon="el-icon-info"
+                  icon-color="red"
+                  title="您确定删除吗？"
+                  @OnConfirm="deletePaper(scope.row.paperId)"
+                  @confirm="deletePaper(scope.row.paperId)"
+              >
+                <el-button type="danger" style="margin-left: 10px" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
+              </el-popconfirm>
+            </template>
 
             <el-button type="success" @click="editpaper(scope.row.paperId)" style="margin-left: 10px">修改 <i class="el-icon-document"></i></el-button>
 
-            <el-button type="warning" @click="assignPaper(scope.row.paperId)" style="margin-left: 10px">分配 <i class="el-icon-user-solid"></i></el-button>
+            <template v-if="userType === 'admin'">
+              <el-button type="warning" @click="assignPaper(scope.row.paperId)" style="margin-left: 10px">分配 <i class="el-icon-user-solid"></i></el-button>
+            </template>
 
           </template>
           </el-table-column>
@@ -108,6 +115,8 @@
               userName:""
             },
 
+            userType:"",
+
             current_order_id: 0,
             current_state: 0,
                 //表格高度 window.innerHeight窗口文档显示高度
@@ -123,6 +132,8 @@
       created() {
         this.$nextTick(() => {
           this.tableHeight = window.innerHeight - 210; //后面的50：根据需求空出的高度，自行调整
+          this.userType = sessionStorage.getItem("TYPE");
+          console.log("当前用户类型为：", this.userType);
           this.getAllData();
         });        
       },
