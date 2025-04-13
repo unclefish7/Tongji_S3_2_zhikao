@@ -124,7 +124,7 @@ export function executePython(exePath, workingDir,inputFile,outputFile) {
         const command = `"${exePath}" --input "${inputFile}" --output "${outputFile}"`; // 拼接带参数的命令
         exec(command, { cwd: workingDir }, (error, stdout, stderr) => {
             if (error) {
-                console.error(`执行 Python 程序时出错: ${error}`);
+                console.error(`执行 Python 程序时出错: ${error.message || JSON.stringify(error)}`);
                 reject(error);
                 return;
             }
@@ -199,7 +199,7 @@ export async function compareQuestions(filename) {
             // 计算分词后的相似度
             const similarity = diceCoefficient(segmentedA.join(''), segmentedB.join(''));
             if (similarity > 0.5) { // 可调整相似度阈值
-                smData = {"questionA": questions[i], "questionB":questions[j], "score": similarity.toFixed(2)}
+                let smData = {"questionA": questions[i], "questionB":questions[j], "score": similarity.toFixed(2)}
                 console.log(smData)
                 similarityQuestions.push(smData);
             }
@@ -288,71 +288,71 @@ export function convertParsedDocumentToWord(docx, document) {
 
     const traverse = (node) => {
         if (node.nodeName === 'p') {
-            let paragraph = docx.createP();
-            if (node.childNodes) {
-                node.childNodes.forEach(child => {
-                    if (child.nodeName === '#text') {
-                        let paragraphText = ''
-                        if (child.value.trim()!== '') {
-                            paragraphText += child.value;
-                            paragraph.addText(paragraphText);
-                        }
-                    } else if (child.nodeName === 'img') {
-                        // 获取图片的宽度和高度
-                        const width = getStyleValue(child, 'width');
-                        const height = getStyleValue(child, 'height');
-                        const src = getAttributeValue(child, 'src');
-
-                        // 计算调整后的宽度和高度
-                        let adjustedWidth = 0.0;
-                        let adjustedHeight = 0.0;
-
-                        if (width.endsWith('px') && height.endsWith('px')) {
-                            const widthNum = parseFloat(width.slice(0, -2));
-                            const heightNum = parseFloat(height.slice(0, -2))
-
-                            // 计算缩放比例
-                            let scale = 1.0;
-                            if (widthNum > MAX_WIDTH) {
-                                scale = MAX_WIDTH / widthNum;
-                            }
-                            if (heightNum * scale > MAX_HEIGHT) {
-                                scale = MAX_HEIGHT / heightNum;
-                            }
-                            // 计算调整后的宽度和高度
-                            adjustedWidth = widthNum * scale;
-                            adjustedHeight = heightNum * scale;
-                        } else {
-                            adjustedWidth = MAX_WIDTH;
-                            adjustedHeight = MAX_HEIGHT;
-                        }
-                        
-                        // 创建一个段落来放置图片
-                        // let imgParagraph = docx.createP();
-                        // 这里假设 docx 库有一个方法可以根据 src 添加图片并设置宽高
-                        // 实际使用时需要根据具体的 docx 库文档来调整
-                        if (src.startsWith('file:///')) {
-                            const cgsrc = src.slice(8);
-                            paragraph.addImage(cgsrc, {
-                                cx: adjustedWidth, // 宽度
-                                cy: adjustedHeight // 高度
-                            });
-                        }
-                        
-                        //const absoluteSrc = path.resolve(src);
-                        //console.log(absoluteSrc)
-
-                        
-                    }
-                });
-            }
-
+            handleParagraphNode(node);
         } else if (node.childNodes) {
-            node.childNodes.forEach(child => {
-                traverse(child);
-            });
+            node.childNodes.forEach(child => traverse(child));
         }
     };
+
+    function handleParagraphNode(node) {
+        let paragraph = docx.createP();
+        if (node.childNodes) {
+            node.childNodes.forEach(child => {
+                if (child.nodeName === '#text') {
+                    handleTextNode(child, paragraph);
+                } else if (child.nodeName === 'img') {
+                    handleImageNode(child, paragraph);
+                }
+            });
+        }
+    }
+
+    function handleTextNode(child, paragraph) {
+        let paragraphText = '';
+        if (child.value.trim() !== '') {
+            paragraphText += child.value;
+            paragraph.addText(paragraphText);
+        }
+    }
+
+    function handleImageNode(child, paragraph) {
+        const width = getStyleValue(child, 'width');
+        const height = getStyleValue(child, 'height');
+        const src = getAttributeValue(child, 'src');
+
+        let { adjustedWidth, adjustedHeight } = calculateAdjustedDimensions(width, height);
+
+        if (src.startsWith('file:///')) {
+            const cgsrc = src.slice(8);
+            paragraph.addImage(cgsrc, {
+                cx: adjustedWidth,
+                cy: adjustedHeight
+            });
+        }
+    }
+
+    function calculateAdjustedDimensions(width, height) {
+        let adjustedWidth = MAX_WIDTH;
+        let adjustedHeight = MAX_HEIGHT;
+
+        if (width.endsWith('px') && height.endsWith('px')) {
+            const widthNum = parseFloat(width.slice(0, -2));
+            const heightNum = parseFloat(height.slice(0, -2));
+
+            let scale = 1.0;
+            if (widthNum > MAX_WIDTH) {
+                scale = MAX_WIDTH / widthNum;
+            }
+            if (heightNum * scale > MAX_HEIGHT) {
+                scale = MAX_HEIGHT / heightNum;
+            }
+
+            adjustedWidth = widthNum * scale;
+            adjustedHeight = heightNum * scale;
+        }
+
+        return { adjustedWidth, adjustedHeight };
+    }
 
     // 辅助函数：从节点的属性列表中获取指定属性的值
     function getAttributeValue(node, attrName) {
