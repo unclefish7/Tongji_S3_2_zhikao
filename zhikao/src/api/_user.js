@@ -29,7 +29,8 @@ export function handleUserAPI(ipcMain) {
                 username: username,
                 data: data,
                 salt: salt,
-                hashedPassword: hashedPassword
+                hashedPassword: hashedPassword,
+                papers_distributed: [],
             };
             const users = await readUserFile();
             let userIndex = -1;
@@ -67,46 +68,47 @@ export function handleUserAPI(ipcMain) {
      * 1：密码错误
      * 2：登录成功
      */
-    ipcMain.handle('edit-user', async (event, username, password, data) => {
-        const salt = crypto.randomBytes(16).toString('hex');
+    ipcMain.handle('edit-user', async (event, username, password) => {
         const iterations = 1000;
         const keylen = 64;
         const digest = 'sha512';
-        crypto.pbkdf2(password, salt, iterations, keylen, digest, async (err, derivedKey) => {
-            if (err) {
-                console.error('Error encrypting password:', err);
-                return;
-            }
-            const hashedPassword = derivedKey.toString('hex');
-            const userInfo = {
-                username: username,
-                data: data,
-                salt: salt,
-                hashedPassword: hashedPassword
-            };
-            const users = await readUserFile();
-            let userIndex = -1;
+        const users = await readUserFile();
+        let userIndex = -1;
 
-            // 查找是否存在相同用户名的用户
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].username === username) {
-                    userIndex = i;
-                    break;
-                }
+        // 查找是否存在相同用户名的用户
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].username === username) {
+                userIndex = i;
+                break;
             }
+        }
 
-            if (userIndex !== -1) {
-                // 如果存在相同用户名的用户，更新该用户的信息
-                users[userIndex] = userInfo;
-                console.log('User edited successfully.');
-            } else {
-                // 如果不存在相同用户名的用户，创建新用户
-                console.log('No such user! User edit failed.');
-                return false;
-            }
-            await writeUserFile(users);
-            return true;
-        });
+        if (userIndex !== -1) {
+            // 如果存在相同用户名的用户，更新该用户的信息
+            const user = users[userIndex];
+            const salt = crypto.randomBytes(16).toString('hex');
+            return new Promise((resolve, reject) => {
+                crypto.pbkdf2(password, salt, iterations, keylen, digest, async (err, derivedKey) => {
+                    if (err) {
+                        console.error('Error encrypting password:', err);
+                        reject(err);
+                        return;
+                    }
+                    const hashedPassword = derivedKey.toString('hex');
+                    user.username = username;
+                    user.salt = salt;
+                    user.hashedPassword = hashedPassword;
+
+                    console.log('User edited successfully.');
+                    await writeUserFile(users);
+                    resolve({ success: true, user: { username: user.username, data: user.data } });
+                });
+            });
+        } else {
+            // 如果不存在相同用户名的用户，返回失败
+            console.log('No such user! User edit failed.');
+            return { success: false, message: 'User not found' };
+        }
     });
 
     ipcMain.handle('login-user', async (event, username, password) => {

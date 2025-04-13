@@ -29,13 +29,6 @@
     data() {
       return {
         apiList: {
-          node: { fn: window.electronAPI.node, inputs: [], placeholders: [] },
-          chrome: { fn: window.electronAPI.chrome, inputs: [], placeholders: [] },
-          electron: { fn: window.electronAPI.electron, inputs: [], placeholders: [] },
-          ping: { fn: window.electronAPI.ping, inputs: [], placeholders: [] },
-  
-          getUserName: { fn: window.electronAPI.user.getUserName, inputs: [], placeholders: [] },
-          getUserAge: { fn: window.electronAPI.user.getUserAge, inputs: [], placeholders: [] },
           registerUser: {
             fn: window.electronAPI.user.registerUser,
             inputs: ["", "", "{}"],
@@ -43,8 +36,8 @@
           },
           editUser: {
             fn: window.electronAPI.user.editUser,
-            inputs: ["", "", "{}"],
-            placeholders: ["用户名", "密码", "更新数据(JSON格式)"]
+            inputs: ["", ""],
+            placeholders: ["用户名", "密码"]
           },
           loginUser: {
             fn: window.electronAPI.user.loginUser,
@@ -147,7 +140,7 @@
         }
       },
       goBack() {
-        this.$router.push('/login');
+        this.$router.push('/');
       }
     },
   }
