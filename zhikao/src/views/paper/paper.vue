@@ -9,19 +9,19 @@
         border：表格边框
         prop：字段属性需要跟表格的数据对应
         -->
-        <el-table 
+    <el-table 
         :data="tableData.slice((currentpage1-1)*pagesize,currentpage1*pagesize)" :height="tableHeight" border style="width: 100%">
           <el-table-column prop="name" label="名称"></el-table-column>
-          <el-table-column prop="score" label="总分"></el-table-column>
+          <el-table-column prop="score" label="总分" width="80"></el-table-column>
           <el-table-column prop="department" label="院系"></el-table-column>
-          <el-table-column prop="duration" label="时长（时）"></el-table-column>
+          <el-table-column prop="duration" label="时长（时）" width="100"></el-table-column>
 
           <el-table-column label="考卷">
             <template v-slot="scope">
               <el-button type="primary" @click="viewpaper(scope.row.paperId, scope.row.score)">查看考卷</el-button>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="280" >
+          <el-table-column label="操作" width="400" >
           <template v-slot="scope">
             <el-popconfirm
                 class="ml-5"
@@ -37,6 +37,9 @@
             </el-popconfirm>
 
             <el-button type="success" @click="editpaper(scope.row.paperId)" style="margin-left: 10px">修改 <i class="el-icon-document"></i></el-button>
+
+            <el-button type="warning" @click="assignPaper(scope.row.paperId)" style="margin-left: 10px">分配 <i class="el-icon-user-solid"></i></el-button>
+
           </template>
           </el-table-column>
 
@@ -141,6 +144,9 @@
          editpaper(paperId){
           console.log(paperId)
           this.$router.push({ path: '/editpaper', query: { paperId: paperId} });
+         },
+         assignPaper(paperId){
+          this.$router.push({ path: '/assignpaper', query: { paperId: paperId} });
          },
          takepaper(ID){
            this.form1={type1:2,type2:2,paperId:ID}
