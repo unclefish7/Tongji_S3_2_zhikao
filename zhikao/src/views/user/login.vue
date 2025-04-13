@@ -14,6 +14,8 @@
         </div>
           
       </div>
+      <!-- 悬浮的 API 测试按钮 -->
+      <el-button type="info" class="api-test-btn" @click="goToApiTest">API 测试</el-button>
     </div>
   </template>
   
@@ -58,6 +60,10 @@
       }
     },
     methods: {
+      goToApiTest() {
+        this.$router.push('/api-test');
+      },
+
       login() {       
         this.$router.push('/')
       },
@@ -114,6 +120,14 @@
   </script>
   
   <style scoped>
+  .api-test-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    opacity: 0.7;
+  }
+  
   .loginbody {
     width: 100%;
     height: 100%;
