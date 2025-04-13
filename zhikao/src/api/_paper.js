@@ -6,6 +6,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 import { readPaperFile, saveRichTextData } from './_utils';
 import { readExamFile, saveExamData } from './_utils';
+import { readUserFile, writeUserFile } from './_utils'; // 引入 readUserFile 和 writeUserFile 函数
 
 export function handlePaperAPI(ipcMain) {
 
@@ -153,6 +154,33 @@ export function handlePaperAPI(ipcMain) {
         } catch (error) {
             console.error('Error delete paper:', error);
             return { success: false, message: 'Failed to delete paper' };
+        }
+    });
+
+    ipcMain.handle('updatePaperPermissions', async (event, paperId, userList) => {
+        try {
+            // 使用 readUserFile 函数读取用户数据文件
+            const usersData = await readUserFile();
+
+            // 遍历用户数据，更新权限
+            usersData.forEach(user => {
+                if (userList.includes(user.username)) {
+                    // 如果用户在列表中，确保试卷ID在其权限列表中
+                    if (!user.papers_distributed.includes(paperId)) {
+                        user.papers_distributed.push(paperId);
+                    }
+                } else {
+                    // 如果用户不在列表中，移除试卷ID
+                    user.papers_distributed = user.papers_distributed.filter(id => id !== paperId);
+                }
+            });
+
+            // 使用 writeUserFile 函数保存更新后的用户数据
+            await writeUserFile(usersData);
+            return { success: true, message: 'Permissions updated successfully' };
+        } catch (error) {
+            console.error('Error updating paper permissions:', error);
+            return { success: false, message: 'Failed to update permissions' };
         }
     });
 

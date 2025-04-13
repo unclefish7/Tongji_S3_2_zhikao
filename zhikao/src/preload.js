@@ -37,7 +37,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addPaper: (data) => ipcRenderer.invoke('addPaper', data),
     editPaper: (paperId, updatedData) => ipcRenderer.invoke('editPaper', paperId, updatedData),
     deletePaper: (paperId) => ipcRenderer.invoke('deletePaper', paperId),
-
+    updatePaperPermissions: (paperId, userList) => ipcRenderer.invoke('updatePaperPermissions', paperId, userList),
   },
   curriculum: {
     readTotalCurriculumFile: () => ipcRenderer.invoke('readTotalCurriculumFile'),
