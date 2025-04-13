@@ -31,7 +31,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addQuestion: (filename, newQuestionData,userName) => ipcRenderer.invoke('addQuestion', filename, newQuestionData,userName),
     editQuestion: (filename, id, updatedData,userName) => ipcRenderer.invoke('editQuestion', filename, id, updatedData,userName),
     readPaperFile: (filename) => ipcRenderer.invoke('readPaperFile', filename),
-    deleteQuestion: (filename, questionId,userName) => ipcRenderer.invoke('deleteQuestion', filename, questionId,userName),
+    deleteQuestion: (filename, questionId,userName) => ipcRenderer.invoke('deleteQuestion', filename, questionId, userName),
 
     //Paper
     addPaper: (data) => ipcRenderer.invoke('addPaper', data),
