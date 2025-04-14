@@ -82,6 +82,9 @@ export default {
     // 内容 HTML
     const valueHtml = ref('<p>hello</p>')
     const score = ref(0)
+    const type = ref('')
+    const paperId = ref('')
+    const questionId = ref(0)
     const { proxy } = getCurrentInstance()  // 获取 options API 中的 this
     const isRegistered = globalState.isRegistered  // 直接引用，全局响应式绑定
     console.log('是否注册:', isRegistered.value) // 读取值
@@ -94,6 +97,30 @@ export default {
         Boot.registerMenu(kityformula);
         isRegistered.value = true; // 标记插件已经注册
       }
+        // 新增：从路由中获取 paperId 和 questionId，并初始化内容
+        const paperId = proxy.$route.query.paperId
+        const questionId = proxy.$route.query.questionId
+        // 保存到 proxy，供其他逻辑使用
+        proxy.paperId = paperId
+        proxy.questionId = questionId
+        // 加载题目信息
+        window.electronAPI.paper.readPaperFile(`${paperId}.json`)
+          .then(allQuestions => {
+            const current = allQuestions.find(q => q.id == questionId)
+            if (current) {
+              score.value = current.score || 0
+              type.value = current.type || ''
+              valueHtml.value = current.richTextContent || '<p></p>'
+              proxy.originalData = {
+                score: score.value,
+                type: type.value,
+                richTextContent: valueHtml.value
+              }
+            }
+          })
+          .catch(err => {
+            console.error('加载题目失败:', err)
+          })
     })
 
     const toolbarConfig = {
@@ -117,9 +144,7 @@ export default {
         // 获取文件地址
         const filePath = file.path.replace(/\\/g, '/');
         console.log(filePath)
-
         const result = await window.electronAPI.saveImage(filePath);
-
         const url = `file:///${result}`;
         const alt = file.name;
         const href = url;
@@ -184,6 +209,10 @@ export default {
     return {
       editorRef,
       valueHtml,
+      score,
+      type,
+      paperId,
+      questionId,
       mode: 'default', // 或 'simple'
       toolbarConfig,
       editorConfig,
@@ -198,7 +227,12 @@ export default {
       score: 0,
       paperId: 0,
       questionId: 0,
-      type: ""
+      type: "",
+      originalData: {
+        score: 0,
+        type: '',
+        richTextContent: '',
+      },
     };
   },
 
@@ -234,11 +268,16 @@ export default {
     },
     saveEditroContent() {
       var data = this.getEditorContent()
-      data.score = this.score
-      data.type = this.type
-      const userName=globalState.currentUserName
-      console.log(userName)
-      const result = window.electronAPI.paper.editQuestion(this.paperId +'.json', this.questionId, data,userName)
+      data.score = this.score|| this.originalData.score
+      data.type = this.type|| this.originalData.type
+      // 如果用户没有修改富文本内容，则保留原始内容
+      if (
+        !data.richTextContent || 
+        data.richTextContent === '<p>在此输入题目内容</p>'
+      ) {
+        data.richTextContent = this.originalData.richTextContent
+      }
+      const result = window.electronAPI.paper.editQuestion(this.paperId +'.json', this.questionId, data)
       console.log(result)
     }
   }
