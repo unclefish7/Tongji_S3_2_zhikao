@@ -165,7 +165,6 @@ import Vue from 'vue';
 import VueModal from 'vue-modal-plugin';
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
-import globalState from '@/globalState'
 
 Vue.use(VueModal);
 
@@ -294,9 +293,7 @@ export default {
     },
 
     async deleteQuestion(id) {
-      const userName=globalState.currentUserName;
-      console.log(userName)
-      const result = await window.electronAPI.paper.deleteQuestion(this.paperId +'.json', id,userName);
+      const result = await window.electronAPI.paper.deleteQuestion(this.paperId +'.json', id);
       if(result.success){
         await this.getAllData();
       }
@@ -336,4 +333,5 @@ export default {
   margin-left: 30px;
 }
 </style>
+
 
