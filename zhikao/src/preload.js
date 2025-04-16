@@ -38,6 +38,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     editPaper: (paperId, updatedData) => ipcRenderer.invoke('editPaper', paperId, updatedData),
     deletePaper: (paperId) => ipcRenderer.invoke('deletePaper', paperId),
     updatePaperPermissions: (paperId, userList) => ipcRenderer.invoke('updatePaperPermissions', paperId, userList),
+    listAllPaperFiles: () => ipcRenderer.invoke('paper:listAllPaperFiles'),
+    writePaperFile: (filename, data) => ipcRenderer.invoke('paper:writePaperFile', filename, data),
+    listAdminPaperFiles: () => ipcRenderer.invoke('paper:listAdminPaperFiles'),
+    writeAdminPaperFile: (filename, data) => ipcRenderer.invoke('paper:writeAdminPaperFile', filename, data),
+    readTotalExamMeta: () => ipcRenderer.invoke('paper:readTotalExamMeta'),
+    addMergedPaperMeta: (meta) => ipcRenderer.invoke('paper:addMergedPaperMeta', meta),
   },
   curriculum: {
     readTotalCurriculumFile: () => ipcRenderer.invoke('readTotalCurriculumFile'),
