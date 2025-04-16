@@ -4,8 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { saveTotalCurriculumData, readTotalCurriculumFile } from './_utils';
-import { readExamFile } from './_utils';
+import { saveTotalCurriculumData, readTotalCurriculumFile, readExamFile } from './_utils';
 
 export function handleCurriculumAPI(ipcMain) {
 
@@ -37,7 +36,7 @@ export function handleCurriculumAPI(ipcMain) {
             const result =  await saveTotalCurriculumData(existingData);
             if (result.success){
                 //生成文件
-                initContent = '[]';
+                const initContent = '[]';
                 const filepath = './src/data/curriculum/c' + curriculumId + '.json';
                 fs.writeFile(filepath, initContent, 'utf8');
                 return { success: true, message: 'Data saved successfully' };
