@@ -182,4 +182,61 @@ export function handlePaperAPI(ipcMain) {
         }
     });
 
+    ipcMain.handle('paper:listAllPaperFiles', async () => {
+        try {
+            const folderPath = path.join(process.cwd(), '../data/paper');
+            const files = await fs.readdir(folderPath);
+            return files;
+        } catch (error) {
+            console.error('Error reading paper file list:', error);
+            return [];
+        }
+    });
+
+    ipcMain.handle('paper:writePaperFile', async (event, filename, data) => {
+        try {
+            const fullPath = path.join(process.cwd(), '../data/paper', filename);
+            await fs.writeFile(fullPath, JSON.stringify(data, null, 2), 'utf8');
+            return { success: true };
+        } catch (error) {
+            console.error('Error writing paper file:', error);
+            return { success: false, message: 'Failed to write file' };
+        }
+    });    
+
+    ipcMain.handle('paper:listAdminPaperFiles', async () => {
+        const folderPath = path.join(process.cwd(), '../data/paper');
+        await fs.mkdir(folderPath, { recursive: true });
+        return fs.readdir(folderPath);
+    });      
+
+    ipcMain.handle('paper:writeAdminPaperFile', async (event, filename, data) => {
+        const folderPath = path.join(process.cwd(), '../data/paper');
+        await fs.mkdir(folderPath, { recursive: true });
+      
+        const fullPath = path.join(folderPath, filename);
+        await fs.writeFile(fullPath, JSON.stringify(data, null, 2), 'utf8');
+        return { success: true };
+    });
+
+    ipcMain.handle('paper:readTotalExamMeta', async () => {
+        const filePath = path.join(process.cwd(), '../data/exam/totalExam.json');
+        const raw = await fs.readFile(filePath, 'utf8');
+        return JSON.parse(raw);
+    });
+    
+    ipcMain.handle('paper:addMergedPaperMeta', async (event, metaEntry) => {
+        const filePath = path.join(process.cwd(), '../data/exam/totalExam.json');
+        let existing = [];
+        try {
+            const raw = await fs.readFile(filePath, 'utf8');
+            existing = JSON.parse(raw);
+        } catch (e) {
+            existing = []; // 文件不存在或内容出错时初始化为空
+        }
+        existing.push(metaEntry);
+        await fs.writeFile(filePath, JSON.stringify(existing, null, 2), 'utf8');
+        return { success: true };
+    });
+      
 }
