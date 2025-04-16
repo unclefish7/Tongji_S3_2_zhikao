@@ -1,37 +1,23 @@
 [
   {
-    "paperId": "053400paper1",
+    "paperId": "053400paper1_admin001",
     "name": "试卷校验测试",
     "score": "100",
     "department": "计算机科学与技术",
     "duration": "1.5h"
   },
   {
-    "paperId": "053400paper2",
-    "name": "2023年研究生招生考试-计算机综合",
+    "paperId": "053400paper1_admin002",
+    "name": "试卷校验测试",
     "score": "100",
-    "department": "计算机科学与技术学院",
+    "department": "计算机科学与技术",
     "duration": "1.5h"
   },
   {
-    "paperId": "085400paper3",
-    "name": "2023年研究生招生考试-英语",
-    "score": "50",
-    "department": "计算机科学与技术学院",
-    "duration": "1.5h"
-  },
-  {
-    "paperId": "paper1739602434317",
-    "name": "2025年计算机科学与技术学院-计算机综合",
+    "paperId": "053400paper1_merge_1744794112054",
+    "name": "试卷校验测试（合并）",
     "score": "100",
-    "department": "计算机科学与技术学院",
-    "duration": "1h"
-  },
-  {
-    "paperId": "paper1741781270646",
-    "name": "2026全国硕士研究生统一考试数学（一）",
-    "score": "150",
-    "department": "数学科学学院",
-    "duration": "3h"
+    "department": "计算机科学与技术",
+    "duration": "1.5h"
   }
 ]
