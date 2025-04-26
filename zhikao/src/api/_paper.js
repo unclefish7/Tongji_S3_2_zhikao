@@ -4,7 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile } from './_utils'; // Consolidated imports
+import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO } from './_utils'; // Consolidated imports
 
 export function handlePaperAPI(ipcMain) {
 
@@ -166,6 +166,8 @@ export function handlePaperAPI(ipcMain) {
                     // 如果用户在列表中，确保试卷ID在其权限列表中
                     if (!user.papers_distributed.includes(paperId)) {
                         user.papers_distributed.push(paperId);
+                        // 生成特殊的试卷格式，便于临时用户在其系统中导入
+                        createPaperDTO(paperId, user.username);
                     }
                 } else {
                     // 如果用户不在列表中，移除试卷ID

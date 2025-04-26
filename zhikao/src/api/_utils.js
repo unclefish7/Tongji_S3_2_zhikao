@@ -282,6 +282,62 @@ export async function checkQuestionIntact(filename) {
     return missingTableQuestions
 }
 
+/**
+ * 
+ * @param {*} data
+ * 功能：创建特殊的试卷格式便于用户导入
+ */
+export async function createPaperDTO (paperId, username) {
+    try {
+        const filename = paperId + '.json';
+        const questions = await readPaperFile(filename);
+        const exams = await readExamFile();
+        // 找到对应 paperId 的信息
+        const examInfo = exams.find(exam => exam.paperId === paperId);
+    
+        if (!examInfo) {
+            console.error(`未找到对应的试卷信息: ${paperId}`);
+            return;
+        }
+        
+        // 构建 DTO 对象
+        const paperDTO = {
+            info: {
+              paperId: examInfo.paperId,
+              name: examInfo.name,
+              score: examInfo.score,
+              department: examInfo.department,
+              duration: examInfo.duration
+            },
+            questions: questions
+        };  
+    
+        // 确保保存目录存在
+        const saveDir = '../data/paperDTO';
+
+        // 保存为 paperId_username.json
+        const savePath = path.join(saveDir, `${paperId}_${username}.json`);
+        await fs.writeFile(savePath, JSON.stringify(paperDTO, null, 2), 'utf-8');
+    
+        console.log(`成功为用户 ${username} 创建试卷 DTO 文件：${savePath}`);
+
+        const newPaperId = `${paperId}_${username}`;
+        // 更新 totalExam：新增一条新的记录
+        const updatedExams = [...exams, {
+            paperId: newPaperId,
+            name: examInfo.name,
+            score: examInfo.score,
+            department: examInfo.department,
+            duration: examInfo.duration
+        }];
+        await saveExamData(updatedExams);
+
+    } catch (error) {
+        console.error('创建 PaperDTO 文件时出错:', error);
+    }
+
+}
+
 export function convertParsedDocumentToWord(docx, document) {
     const MAX_WIDTH = 120.0; // 预设图片最大宽度
     const MAX_HEIGHT = 80.0; // 预设图片最大高度
