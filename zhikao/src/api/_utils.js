@@ -299,11 +299,13 @@ export async function createPaperDTO (paperId, username) {
             console.error(`未找到对应的试卷信息: ${paperId}`);
             return;
         }
+
+        const newPaperId = `${paperId}_${username}`;
         
         // 构建 DTO 对象
         const paperDTO = {
             info: {
-              paperId: examInfo.paperId,
+              paperId: newPaperId,
               name: examInfo.name,
               score: examInfo.score,
               department: examInfo.department,
@@ -321,7 +323,6 @@ export async function createPaperDTO (paperId, username) {
     
         console.log(`成功为用户 ${username} 创建试卷 DTO 文件：${savePath}`);
 
-        const newPaperId = `${paperId}_${username}`;
         // 更新 totalExam：新增一条新的记录
         const updatedExams = [...exams, {
             paperId: newPaperId,
