@@ -19,5 +19,12 @@
     "score": "100",
     "department": "计算机科学与技术",
     "duration": "1.5h"
+  },
+  {
+    "paperId": "053400testpaper1_admin001",
+    "name": "试卷校验测试（导入）",
+    "score": "100",
+    "department": "计算机科学与技术",
+    "duration": "1.5h"
   }
 ]
