@@ -60,7 +60,7 @@ export async function saveTotalCurriculumData(data) {
     }
 }
 
-export async function readExamFile() {
+/*export async function readExamFile() {
     const filePath = '../data/exam/totalExam.json';
     try {
         const fileContent = await fs.readFile(filePath, 'utf8');
@@ -70,7 +70,37 @@ export async function readExamFile() {
         console.error('读取文件或解析 JSON 时出错:', err);
         return [];
     }
-}
+}*/
+
+export async function readExamFile() {
+    const examFilePath = '../data/exam/totalExam.json';
+    const paperFolderPath = '../data/paper';
+  
+    try {
+      // 1. 获取当前 paper 文件夹下存在的所有试卷ID（去掉.json后缀）
+      const paperFiles = await fs.readdir(paperFolderPath);
+      const existingPaperIds = new Set(
+        paperFiles
+          .filter(name => name.endsWith('.json'))
+          .map(name => name.replace('.json', ''))
+      );
+  
+      // 2. 读取 totalExam.json
+      const fileContent = await fs.readFile(examFilePath, 'utf8');
+      const allExamMeta = JSON.parse(fileContent);
+  
+      // 3. 只在内存中过滤，不写回 totalExam.json
+      const filteredExamMeta = allExamMeta.filter(entry => existingPaperIds.has(entry.paperId));
+  
+      // ✅ 注意，这里不再写回 totalExam.json，只是返回
+      return filteredExamMeta;
+    } catch (err) {
+      console.error('读取 totalExam.json 时出错:', err);
+      return [];
+    }
+  }
+  
+
 
 /**
  * 
