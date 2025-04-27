@@ -47,5 +47,19 @@
     "score": "100",
     "department": "计院",
     "duration": "1.5h"
+  },
+  {
+    "paperId": "053400testpaperimport_1_admin001",
+    "name": "试卷校验测试（导入）",
+    "score": "100",
+    "department": "计算机科学与技术",
+    "duration": "1.5h"
+  },
+  {
+    "paperId": "paper1745737151819",
+    "name": "试卷分配导入完整测试",
+    "score": "100",
+    "department": "100",
+    "duration": "100"
   }
 ]
