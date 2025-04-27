@@ -69,7 +69,7 @@
             return;
           }
   
-          const res = await window.electronAPI.importPaperFile(file.path, this.userName);
+          const res = await window.electronAPI.paper.importPaper(file.path, this.userName);
   
           if (res.success) {
             this.$message.success('导入成功！');
