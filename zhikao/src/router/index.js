@@ -49,6 +49,11 @@ const routes = [
         component: () => import('@/views/paper/addpaper.vue'),
       },
       {
+        path: '/importpaper',
+        name: 'importpaper',
+        component: () => import('@/views/paper/importpaper.vue'),
+      },
+      {
         path: '/editpaper',
         name: 'editpaper',
         component: () => import('@/views/paper/editpaper.vue'),

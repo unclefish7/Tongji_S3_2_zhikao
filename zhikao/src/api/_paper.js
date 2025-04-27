@@ -4,7 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile } from './_utils'; // Consolidated imports
+import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO } from './_utils'; // Consolidated imports
 
 export function handlePaperAPI(ipcMain) {
 
@@ -18,10 +18,10 @@ export function handlePaperAPI(ipcMain) {
             }
             newQuestionData.id = newId;
             existingData.push(newQuestionData);
-            if (userName) {
-                const newFileName = filename.replace('.json', `_${userName}.json`);
-                await saveRichTextData(newFileName, existingData);
-            }
+            // if (userName) {
+            //     const newFileName = filename.replace('.json', `_${userName}.json`);
+            //     await saveRichTextData(newFileName, existingData);
+            // }
             return await saveRichTextData(filename, existingData);
         } catch (error) {
             console.error('Error adding question:', error);
@@ -37,10 +37,10 @@ export function handlePaperAPI(ipcMain) {
             console.log(index)
             if (index!== -1) {
                 existingData[index] = {...existingData[index],...updatedData };
-                if (userName) {
-                    const newFileName = filename.replace('.json', `_${userName}.json`);
-                    await saveRichTextData(newFileName, existingData);
-                }
+                // if (userName) {
+                //     const newFileName = filename.replace('.json', `_${userName}.json`);
+                //     await saveRichTextData(newFileName, existingData);
+                // }
                 return await saveRichTextData(filename, existingData);
             } else {
                 return { success: false, message: 'Question with the given id not found' };
@@ -58,10 +58,10 @@ export function handlePaperAPI(ipcMain) {
             if (index!== -1) {
                 //删除id对应题目
                 existingData.splice(index, 1);
-                if (userName) {
-                    const newFileName = filename.replace('.json', `_${userName}.json`);
-                    await saveRichTextData(newFileName, existingData);
-                }
+                // if (userName) {
+                //     const newFileName = filename.replace('.json', `_${userName}.json`);
+                //     await saveRichTextData(newFileName, existingData);
+                // }
                 return await saveRichTextData(filename, existingData);
             } else {
                 return { success: false, message: 'the given id not found' };
@@ -76,10 +76,73 @@ export function handlePaperAPI(ipcMain) {
         return readPaperFile(filename);
     });
 
-    /*
-    * 添加试卷，主要工作有两个，一个是在课程文件中，添加该项试卷的信息；另一个是在存放试卷位置添加考卷文件
-    *
-    */
+    ipcMain.handle('paper:importPaperFile', async (event, filePath, userName) => {
+        try {
+            const rawContent = await fs.readFile(filePath, 'utf8');
+            let parsedContent;
+            try {
+                parsedContent = JSON.parse(rawContent);
+            } catch (err) {
+                console.error('导入失败，文件内容不是合法的 JSON: ', err);
+                return { success: false, message: '导入失败：文件内容不是合法的 JSON。' };
+            }
+    
+            // 检查 info 和 paperId
+            if (!parsedContent.info || !parsedContent.info.paperId) {
+                return { success: false, message: '导入失败：缺少必要的 info.paperId 字段。' };
+            }
+    
+            const { paperId, name, score, department, duration } = parsedContent.info;
+    
+            // ✅ 检查 paperId 的后缀是否包含 userName
+            if (!paperId.includes(userName)) {
+                return { success: false, message: '导入失败：paperId 不包含用户名。' };
+            }
+    
+            // 检查 questions 是不是数组
+            if (!Array.isArray(parsedContent.questions)) {
+                return { success: false, message: '导入失败：questions 字段不存在或格式错误。' };
+            }
+    
+            // 读取 totalExam.json，检查是否已有同样 paperId
+            const totalExamPath = path.join(process.cwd(), '../data/exam/totalExam.json');
+            let totalExamData;
+            try {
+                totalExamData = await readExamFile();
+            } catch (e) {
+                console.error('totalExam.json 不存在，认为是空列表:', e);
+                totalExamData = [];
+            }
+    
+            const exists = totalExamData.some(entry => entry.paperId === paperId);
+            if (exists) {
+                return { success: false, message: '导入失败：该 paperId 已存在。' };
+            }
+    
+            // ✅ 以 paperId 命名保存文件！
+            const destFileName = `${paperId}.json`;
+            const destPath = path.join(process.cwd(), '../data/paper', destFileName);
+            await fs.writeFile(destPath, JSON.stringify(parsedContent.questions, null, 2), 'utf8');
+    
+            // 更新 totalExam.json，增加一条记录
+            totalExamData.push({
+                paperId: paperId,
+                name: name || '未命名试卷',
+                score: score || '未知分数',
+                department: department || '未知部门',
+                duration: duration || '未知时长'
+            });
+            await fs.writeFile(totalExamPath, JSON.stringify(totalExamData, null, 2), 'utf8');
+    
+            return { success: true, message: '导入成功！' };
+        } catch (error) {
+            console.error('Error importing paper:', error);
+            return { success: false, message: '导入失败：内部错误。' };
+        }
+    });
+    
+    
+    
     ipcMain.handle('addPaper', async (event, data) => {
         try {
             let existingData = await readExamFile();
@@ -166,6 +229,8 @@ export function handlePaperAPI(ipcMain) {
                     // 如果用户在列表中，确保试卷ID在其权限列表中
                     if (!user.papers_distributed.includes(paperId)) {
                         user.papers_distributed.push(paperId);
+                        // 生成特殊的试卷格式，便于临时用户在其系统中导入
+                        createPaperDTO(paperId, user.username);
                     }
                 } else {
                     // 如果用户不在列表中，移除试卷ID
@@ -232,6 +297,7 @@ export function handlePaperAPI(ipcMain) {
             const raw = await fs.readFile(filePath, 'utf8');
             existing = JSON.parse(raw);
         } catch (e) {
+            console.error('文件不存在或内容出错:', e);
             existing = []; // 文件不存在或内容出错时初始化为空
         }
         existing.push(metaEntry);
