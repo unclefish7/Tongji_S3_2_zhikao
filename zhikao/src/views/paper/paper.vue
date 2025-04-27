@@ -144,6 +144,10 @@
 export default {
   data(){
     return{
+      allUsers: [],
+      userName: '',
+      userPapers: [],
+
       dialogVisible:false,
       total:0,
       currentpage1:1,
@@ -171,12 +175,21 @@ export default {
   // 在数据变化后要执行的某个操作，而这个操作需要使用随数据改变而改变的DOM结构的时候，
   // 这个操作都应该放进Vue.nextTick()的回调函数中
   created() {
-    this.$nextTick(() => {
-    this.tableHeight = window.innerHeight - 210; //后面的50：根据需求空出的高度，自行调整
-    this.userType = sessionStorage.getItem("TYPE");
-    console.log("当前用户类型为：", this.userType);
-    this.getAllData();
-    });        
+    this.$nextTick(async () => {
+      this.tableHeight = window.innerHeight - 210;
+      const allUsers = await window.electronAPI.user.getUserInfo();
+      this.allUsers = allUsers;
+      this.userName = sessionStorage.getItem("USERNAME"); // 当前登录用户名
+      const currentUser = allUsers.find(u => u.username === this.userName);
+
+      if (currentUser) {
+        this.userType = currentUser.data.type; // admin 或 temp
+        this.userPapers = currentUser.papers_distributed || []; // 只针对临时用户有用
+      }
+      console.log("当前用户信息:", this.userType, this.userPapers);
+      this.getAllData();
+    });
+      
   },
   methods: {
     handleCurrentChange(page) {
@@ -286,15 +299,21 @@ export default {
       this.form1={type1:2,type2:2,paperId:ID}
       this.dialogFormVisible1=true
     },
-    getAllData(){
+    getAllData() {
       window.electronAPI.curriculum.readExamFile()
-        .then(quesitons => {
-        this.tableData = quesitons;
-      })
-      .catch(error => {
-        console.error('获取题目信息时出错:', error);
-      });
-    },
+        .then(questions => {
+          if (this.userType === 'admin') {
+            // 管理员，显示所有
+            this.tableData = questions;
+          } else if (this.userType === 'temp') {
+            // 临时用户，只显示自己papers_distributed里有的
+            this.tableData = questions.filter(q => this.userPapers.includes(q.paperId));
+          }
+        })
+        .catch(error => {
+          console.error('获取题目信息时出错:', error);
+        });
+    }
   }
 }
 </script>
