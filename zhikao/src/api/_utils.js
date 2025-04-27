@@ -60,7 +60,7 @@ export async function saveTotalCurriculumData(data) {
     }
 }
 
-export async function readExamFile() {
+/*export async function readExamFile() {
     const filePath = '../data/exam/totalExam.json';
     try {
         const fileContent = await fs.readFile(filePath, 'utf8');
@@ -70,7 +70,37 @@ export async function readExamFile() {
         console.error('读取文件或解析 JSON 时出错:', err);
         return [];
     }
-}
+}*/
+
+export async function readExamFile() {
+    const examFilePath = path.join('..', 'data', 'exam', 'totalExam.json');
+    const paperFolderPath = path.join('..', 'data', 'paper');
+  
+    try {
+      // 1. 获取 /data/paper/ 下所有已有的paperId（去掉.json后缀）
+      const paperFiles = await fs.readdir(paperFolderPath);
+      const existingPaperIds = new Set(
+        paperFiles
+          .filter(name => name.endsWith('.json'))
+          .map(name => name.replace('.json', ''))
+      );
+  
+      // 2. 读取 totalExam.json
+      const fileContent = await fs.readFile(examFilePath, 'utf8');
+      const allExamMeta = JSON.parse(fileContent); // 这里直接是数组
+  
+      // 3. 过滤掉磁盘上不存在的paperId
+      const filteredExamMeta = allExamMeta.filter(entry => existingPaperIds.has(entry.paperId));
+  
+      // ✅ 注意：这里只返回，不写回totalExam.json
+      return filteredExamMeta;
+    } catch (err) {
+      console.error('读取 totalExam.json 时出错:', err);
+      return [];
+    }
+  }
+  
+
 
 /**
  * 
@@ -280,6 +310,63 @@ export async function checkQuestionIntact(filename) {
         }
     }
     return missingTableQuestions
+}
+
+/**
+ * 
+ * @param {*} data
+ * 功能：创建特殊的试卷格式便于用户导入
+ */
+export async function createPaperDTO (paperId, username) {
+    try {
+        const filename = paperId + '.json';
+        const questions = await readPaperFile(filename);
+        const exams = await readExamFile();
+        // 找到对应 paperId 的信息
+        const examInfo = exams.find(exam => exam.paperId === paperId);
+    
+        if (!examInfo) {
+            console.error(`未找到对应的试卷信息: ${paperId}`);
+            return;
+        }
+
+        const newPaperId = `${paperId}_${username}`;
+        
+        // 构建 DTO 对象
+        const paperDTO = {
+            info: {
+              paperId: newPaperId,
+              name: examInfo.name,
+              score: examInfo.score,
+              department: examInfo.department,
+              duration: examInfo.duration
+            },
+            questions: questions
+        };  
+    
+        // 确保保存目录存在
+        const saveDir = '../data/paperDTO';
+
+        // 保存为 paperId_username.json
+        const savePath = path.join(saveDir, `${paperId}_${username}.json`);
+        await fs.writeFile(savePath, JSON.stringify(paperDTO, null, 2), 'utf-8');
+    
+        console.log(`成功为用户 ${username} 创建试卷 DTO 文件：${savePath}`);
+
+        // 更新 totalExam：新增一条新的记录
+        const updatedExams = [...exams, {
+            paperId: newPaperId,
+            name: examInfo.name,
+            score: examInfo.score,
+            department: examInfo.department,
+            duration: examInfo.duration
+        }];
+        await saveExamData(updatedExams);
+
+    } catch (error) {
+        console.error('创建 PaperDTO 文件时出错:', error);
+    }
+
 }
 
 export function convertParsedDocumentToWord(docx, document) {
