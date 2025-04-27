@@ -1,10 +1,11 @@
 <template>
   <el-main>
+    <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
     <template v-if="userType === 'admin'">
       <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
-      <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
       <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
     </template>
+
     
     <el-form :model="userForm" size="mini" label-width="80px"></el-form>
     
@@ -76,6 +77,16 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      style="margin-top: 20px; text-align: center;"
+      background
+      layout="prev, pager, next"
+      :current-page="currentpage1"
+      :page-size="pagesize"
+      :total="tableData.length"
+      @current-change="handleCurrentChange"
+    />
+
 
     <!-- Dialog for generating papers -->
     <el-dialog 
@@ -168,6 +179,9 @@ export default {
     });        
   },
   methods: {
+    handleCurrentChange(page) {
+      this.currentpage1 = page;
+    },
     async confirmMerge() {
       console.log('即将合并的试卷：', this.selectedToMerge);
       if (this.selectedToMerge.length === 0) {
