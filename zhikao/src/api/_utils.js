@@ -336,7 +336,7 @@ export async function createPaperDTO (paperId, username) {
         const paperDTO = {
             info: {
               paperId: newPaperId,
-              name: examInfo.name,
+              name: `${examInfo.name}_${username}`,
               score: examInfo.score,
               department: examInfo.department,
               duration: examInfo.duration
@@ -356,7 +356,7 @@ export async function createPaperDTO (paperId, username) {
         // 更新 totalExam：新增一条新的记录
         const updatedExams = [...exams, {
             paperId: newPaperId,
-            name: examInfo.name,
+            name: `${examInfo.name}_${username}`, // 在原有的 name 后加上用户名后缀
             score: examInfo.score,
             department: examInfo.department,
             duration: examInfo.duration
