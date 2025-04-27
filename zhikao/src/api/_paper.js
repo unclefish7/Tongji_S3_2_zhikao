@@ -18,10 +18,10 @@ export function handlePaperAPI(ipcMain) {
             }
             newQuestionData.id = newId;
             existingData.push(newQuestionData);
-            if (userName) {
-                const newFileName = filename.replace('.json', `_${userName}.json`);
-                await saveRichTextData(newFileName, existingData);
-            }
+            // if (userName) {
+            //     const newFileName = filename.replace('.json', `_${userName}.json`);
+            //     await saveRichTextData(newFileName, existingData);
+            // }
             return await saveRichTextData(filename, existingData);
         } catch (error) {
             console.error('Error adding question:', error);
@@ -37,10 +37,10 @@ export function handlePaperAPI(ipcMain) {
             console.log(index)
             if (index!== -1) {
                 existingData[index] = {...existingData[index],...updatedData };
-                if (userName) {
-                    const newFileName = filename.replace('.json', `_${userName}.json`);
-                    await saveRichTextData(newFileName, existingData);
-                }
+                // if (userName) {
+                //     const newFileName = filename.replace('.json', `_${userName}.json`);
+                //     await saveRichTextData(newFileName, existingData);
+                // }
                 return await saveRichTextData(filename, existingData);
             } else {
                 return { success: false, message: 'Question with the given id not found' };
@@ -58,10 +58,10 @@ export function handlePaperAPI(ipcMain) {
             if (index!== -1) {
                 //删除id对应题目
                 existingData.splice(index, 1);
-                if (userName) {
-                    const newFileName = filename.replace('.json', `_${userName}.json`);
-                    await saveRichTextData(newFileName, existingData);
-                }
+                // if (userName) {
+                //     const newFileName = filename.replace('.json', `_${userName}.json`);
+                //     await saveRichTextData(newFileName, existingData);
+                // }
                 return await saveRichTextData(filename, existingData);
             } else {
                 return { success: false, message: 'the given id not found' };
