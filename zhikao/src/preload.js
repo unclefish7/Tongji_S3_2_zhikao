@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     deleteQuestion: (filename, questionId,userName) => ipcRenderer.invoke('deleteQuestion', filename, questionId, userName),
 
     //Paper
+    importPaper: (filePath, userName) => ipcRenderer.invoke('paper:importPaperFile', filePath, userName),
     addPaper: (data) => ipcRenderer.invoke('addPaper', data),
     editPaper: (paperId, updatedData) => ipcRenderer.invoke('editPaper', paperId, updatedData),
     deletePaper: (paperId) => ipcRenderer.invoke('deletePaper', paperId),
