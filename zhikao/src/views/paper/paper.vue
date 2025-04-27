@@ -2,6 +2,7 @@
   <el-main>
     <template v-if="userType === 'admin'">
       <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
+      <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
       <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
     </template>
     
@@ -129,7 +130,6 @@
 </template>
 
 <script>
-import axios from "axios"
 export default {
   data(){
     return{
@@ -250,6 +250,13 @@ export default {
     },
     addpaper(){
       this.$router.push({ path: '/addpaper', query: { curriculumId: this.curriculumId } })
+    },
+    importPaper() {
+      // 这是新增的导入试卷逻辑
+      console.log('点击了导入试卷按钮');
+      // 你可以在这里打开弹窗、上传文件，或者跳转到新页面
+      // 例如跳转到另一个界面：
+      this.$router.push('/importpaper');
     },
     viewpaper(paperId, score){
       this.$router.push({ path: '/question', query: { id: paperId , score: score} });
