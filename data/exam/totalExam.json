@@ -28,21 +28,7 @@
     "duration": "1.5h"
   },
   {
-    "paperId": "paper1745655457891_user001",
-    "name": "特殊试卷测试",
-    "score": "100",
-    "department": "计院",
-    "duration": "1.5h"
-  },
-  {
     "paperId": "paper1745657010956",
-    "name": "test",
-    "score": "100",
-    "department": "计院",
-    "duration": "1.5h"
-  },
-  {
-    "paperId": "paper1745657010956_user001",
     "name": "test",
     "score": "100",
     "department": "计院",
