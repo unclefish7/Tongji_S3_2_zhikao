@@ -1,11 +1,9 @@
 <template>
   <el-main>
-    <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
     <template v-if="userType === 'admin'">
       <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
       <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
     </template>
-
     
     <el-form :model="userForm" size="mini" label-width="80px"></el-form>
     
@@ -77,16 +75,6 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination
-      style="margin-top: 20px; text-align: center;"
-      background
-      layout="prev, pager, next"
-      :current-page="currentpage1"
-      :page-size="pagesize"
-      :total="tableData.length"
-      @current-change="handleCurrentChange"
-    />
-
 
     <!-- Dialog for generating papers -->
     <el-dialog 
@@ -141,6 +129,7 @@
 </template>
 
 <script>
+import axios from "axios"
 export default {
   data(){
     return{
@@ -179,9 +168,6 @@ export default {
     });        
   },
   methods: {
-    handleCurrentChange(page) {
-      this.currentpage1 = page;
-    },
     async confirmMerge() {
       console.log('即将合并的试卷：', this.selectedToMerge);
       if (this.selectedToMerge.length === 0) {
@@ -264,13 +250,6 @@ export default {
     },
     addpaper(){
       this.$router.push({ path: '/addpaper', query: { curriculumId: this.curriculumId } })
-    },
-    importPaper() {
-      // 这是新增的导入试卷逻辑
-      console.log('点击了导入试卷按钮');
-      // 你可以在这里打开弹窗、上传文件，或者跳转到新页面
-      // 例如跳转到另一个界面：
-      this.$router.push('/importpaper');
     },
     viewpaper(paperId, score){
       this.$router.push({ path: '/question', query: { id: paperId , score: score} });

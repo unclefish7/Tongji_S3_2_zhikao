@@ -44,8 +44,18 @@
     </el-form-item>
 
     <el-form-item style="margin-left:30%;margin-top:-20px">
-      <el-button type="primary" @click="saveEditorContent">立即修改</el-button>
-      <el-button @click="resetForm">重置</el-button>
+      <el-popconfirm
+          class="ml-5"
+          confirm-button-text='确定'
+          cancel-button-text='我再想想'
+          icon="el-icon-info"
+          icon-color="red"
+          title="您确定添加吗？"
+          @onConfirm="saveEditroContent()"
+      >
+      <el-button type="primary" @click="saveEditroContent" slot="reference">立即添加 <i class="el-icon-remove-outline"></i></el-button>
+      </el-popconfirm>
+      <el-button >重置</el-button>
     </el-form-item>
 
   </el-form>
@@ -101,21 +111,15 @@ export default {
               score.value = current.score || 0
               type.value = current.type || ''
               valueHtml.value = current.richTextContent || '<p></p>'
-              console.log("score.value:", score.value)
-              console.log("type.value:", type.value)
-              proxy.score = score.value
-              proxy.type = type.value
               proxy.originalData = {
                 score: score.value,
                 type: type.value,
                 richTextContent: valueHtml.value
               }
-              console.log("originalData:", proxy.originalData.score, proxy.originalData.type, proxy.originalData.richTextContent)
             }
           })
           .catch(err => {
-            proxy.$message.error('未找到对应题目，请返回重试');
-            proxy.$router.back();
+            console.error('加载题目失败:', err)
           })
     })
 
@@ -262,18 +266,7 @@ export default {
       if (editor == null) return;
       console.log(editor.getHtml()); // 执行 editor API
     },
-    resetForm() {
-      // 将分数、题目类型、富文本内容都重置为 originalData
-      this.score = this.originalData.score
-      this.type = this.originalData.type
-      this.valueHtml = this.originalData.richTextContent
-      this.$message({
-        message: '已恢复初始内容',
-        type: 'info',
-        showClose: true,
-      });
-    },
-    saveEditorContent() {
+    saveEditroContent() {
       var data = this.getEditorContent()
       data.score = this.score|| this.originalData.score
       data.type = this.type|| this.originalData.type
@@ -286,12 +279,6 @@ export default {
       }
       const result = window.electronAPI.paper.editQuestion(this.paperId +'.json', this.questionId, data)
       console.log(result)
-      this.$message({
-        message: '修改成功！',
-        type: 'success',
-        showClose: true,
-      });
-      this.$router.back();
     }
   }
 }

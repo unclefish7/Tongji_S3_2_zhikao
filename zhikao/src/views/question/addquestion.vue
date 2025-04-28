@@ -41,8 +41,18 @@
     </el-form-item>
 
     <el-form-item style="margin-left:30%;margin-top:-20px">
-      <el-button type="primary" @click="saveEditorContent">立即添加</el-button>
-      <!-- <el-button >重置</el-button> -->
+      <el-popconfirm
+          class="ml-5"
+          confirm-button-text='确定'
+          cancel-button-text='我再想想'
+          icon="el-icon-info"
+          icon-color="red"
+          title="您确定添加吗？"
+          @onConfirm="saveEditroContent()"
+      >
+      <el-button type="primary" @click="saveEditroContent" slot="reference">立即添加 <i class="el-icon-remove-outline"></i></el-button>
+      </el-popconfirm>
+      <el-button >重置</el-button>
     </el-form-item>
 
   </el-form>
@@ -218,24 +228,17 @@ export default {
 
       console.log(editor.getHtml()); // 执行 editor API
     },
-    saveEditorContent(){
-      if (!this.type) {
-        this.$message.error('请先选择题目类型');
-        return;
-      }
+    saveEditroContent(){
       var data = this.getEditorContent()
       data.score = this.score
       data.type = this.type
-      const userName=globalState.currentUserName
-      console.log(userName)
-      const result = window.electronAPI.paper.addQuestion(this.paperId +'.json', data,userName)
+      const result = window.electronAPI.paper.addQuestion(this.paperId +'.json', data)
       console.log(result)
       this.$message({
         message: "题目添加成功",
         type: "success",
         showClose: true,
         });
-      this.$router.back();
     }
 
   }

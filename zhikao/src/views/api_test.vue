@@ -67,11 +67,6 @@
             placeholders: ["试卷文件名", "题目ID", "用户名"]
           },
   
-          importPaper: {
-            fn: window.electronAPI.paper.importPaper,
-            inputs: ["", ""],
-            placeholders: ["试卷文件路径", "用户名"]
-          },
           addPaper: {
             fn: window.electronAPI.paper.addPaper,
             inputs: ["{}"],
