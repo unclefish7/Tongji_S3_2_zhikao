@@ -296,6 +296,7 @@ export default {
       const result = await window.electronAPI.paper.deleteQuestion(this.paperId +'.json', id);
       if(result.success){
         await this.getAllData();
+        location.reload();
       }
     },
 
