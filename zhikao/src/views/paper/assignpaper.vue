@@ -46,7 +46,7 @@
             // 等数据拿到后再处理 userList
             this.userList = this.users.map(user => ({
                 ...user,
-                checked: user.papers_distributed?.includes(this.paperId), // 真实判断是否勾选
+                checked: user.papers_distributed?.some(id => id === `${this.paperId}_${user.username}`), // 根据 "paperID_userID" 格式判断
             }));
 
             console.log('处理后的用户列表:', this.userList);
@@ -95,4 +95,3 @@
     margin-right: 10px;
   }
   </style>
-  

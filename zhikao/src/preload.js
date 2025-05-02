@@ -28,10 +28,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     //2.存储试卷信息，（不加密）
 
     //Question
-    addQuestion: (filename, newQuestionData,userName) => ipcRenderer.invoke('addQuestion', filename, newQuestionData,userName),
-    editQuestion: (filename, id, updatedData,userName) => ipcRenderer.invoke('editQuestion', filename, id, updatedData,userName),
+    addQuestion: (filename, newQuestionData) => ipcRenderer.invoke('addQuestion', filename, newQuestionData),
+    editQuestion: (filename, id, updatedData) => ipcRenderer.invoke('editQuestion', filename, id, updatedData),
     readPaperFile: (filename) => ipcRenderer.invoke('readPaperFile', filename),
-    deleteQuestion: (filename, questionId,userName) => ipcRenderer.invoke('deleteQuestion', filename, questionId, userName),
+    deleteQuestion: (filename, questionId) => ipcRenderer.invoke('deleteQuestion', filename, questionId),
 
     //Paper
     importPaper: (filePath, userName) => ipcRenderer.invoke('paper:importPaperFile', filePath, userName),
