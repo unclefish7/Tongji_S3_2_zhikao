@@ -216,16 +216,16 @@ export function handlePaperAPI(ipcMain) {
 
             // 遍历用户数据，更新权限
             usersData.forEach(user => {
+                const paperIdWithUser = `${paperId}_${user.username}`; // 修改为 "paperID_userID" 格式
                 if (userList.includes(user.username)) {
                     // 如果用户在列表中，确保试卷ID在其权限列表中
-                    if (!user.papers_distributed.includes(paperId)) {
-                        user.papers_distributed.push(paperId);
-                        // 生成特殊的试卷格式，便于临时用户在其系统中导入
+                    if (!user.papers_distributed.includes(paperIdWithUser)) {
+                        user.papers_distributed.push(`${paperId}_${user.username}`); // 修改为 "paperID_userID" 格式
                         createPaperDTO(paperId, user.username);
                     }
                 } else {
                     // 如果用户不在列表中，移除试卷ID
-                    user.papers_distributed = user.papers_distributed.filter(id => id !== paperId);
+                    user.papers_distributed = user.papers_distributed.filter(id => id !== paperIdWithUser);
                 }
             });
 
