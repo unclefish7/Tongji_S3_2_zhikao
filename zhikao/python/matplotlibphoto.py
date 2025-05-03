@@ -6,7 +6,7 @@ from docx.shared import Inches
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from matplotlib import rcParams
 import re
 
@@ -18,12 +18,21 @@ rcParams['axes.unicode_minus'] = False    # 解决负号显示问题
 def generate_latex_image(latex_content, image_path):
     try:
         # 使用 matplotlib 来渲染 LaTeX
+        latex_content = latex_content.replace('\\pix', '\\pi x')
+        latex_content = latex_content.replace('\\pix', r'\pi x')
         fig, ax = plt.subplots()
-        ax.text(0.5, 0.5, f'${latex_content}$', fontsize=20, ha='center', va='center')
         ax.axis('off')
+        text = ax.text(0.5, 0.5, f'${latex_content}$', fontsize=20, ha='center', va='center')
+        fig.canvas.draw()
+        bbox = text.get_window_extent(renderer=fig.canvas.get_renderer())
+        # 转换像素到英寸，DPI=300
+        width_inch = bbox.width / fig.dpi
+        height_inch = bbox.height / fig.dpi
+        fig.set_size_inches(width_inch, height_inch)
         image_file_path = os.path.join(image_path, 'latex_image.png')
-        plt.savefig(image_file_path, dpi=300, bbox_inches='tight')
+        plt.savefig(image_file_path, dpi=300, bbox_inches='tight', pad_inches=0.05)
         plt.close(fig)
+
         return image_file_path
     except Exception as e:
         print(f"Error generating LaTeX image: {e}")
@@ -32,55 +41,66 @@ def generate_latex_image(latex_content, image_path):
 def insert_local_image(doc, img_path):
     # 如果图片是本地文件路径，直接插入
     with open(img_path, 'rb') as f:
-        doc.add_paragraph().add_run('图：').add_picture(f, width=Inches(3.0))  # 你可以调整宽度
+        doc.add_paragraph().add_picture(f)  
 
 # 处理表格插入
 def insert_table_from_html(doc, table_html):
-    # 使用 BeautifulSoup 解析表格 HTML
     soup = BeautifulSoup(table_html, "html.parser")
-    
-    # 获取表头，处理表头数据
-    headers = soup.find_all('th')
-    rows = soup.find_all('tr')
-    
-    # 获取表格的列数
-    num_cols = len(headers) if headers else len(rows[0].find_all('td'))
-    
-    # 创建表格，设置初始行数为 0，列数为表头的列数
+    table_tag = soup.find('table')
+    if not table_tag:
+        print("No table found in HTML.")
+        return
+    rows = table_tag.find_all('tr')
+    if not rows:
+        print("No rows found in table.")
+        return
+    first_row_cells = rows[0].find_all(['th', 'td'])
+    num_cols = len(first_row_cells)
     table = doc.add_table(rows=0, cols=num_cols)
-
-    # 如果有表头，添加表头
-    if headers:
-        header_row = table.add_row().cells
-        for i, header in enumerate(headers):
-            header_row[i].text = header.get_text().strip()
-    
-    # 遍历数据行，跳过表头行
+    table.autofit = True
     for row in rows:
-        # 如果是表头行，跳过
-        if row.find_all('th'):
-            continue
-        
-        cols = row.find_all('td')
+        cells = row.find_all(['th', 'td'])
         row_cells = table.add_row().cells
-        
-        for i, col in enumerate(cols):
-            if i < len(row_cells):  # 确保索引不超出范围
-                row_cells[i].text = col.get_text().strip()
-            else:
-                # 如果列数不足，填充空单元格
-                row_cells.append(row_cells[-1].clone())
-                row_cells[i].text = col.get_text().strip()
-# 从 richTextContent 中提取 LaTeX 公式
-def extract_latex_from_html(content):
-    # 使用正则表达式提取 LaTeX 公式
-    match = re.search(r'data-value="([^"]+)"', content)
-    if match:
-        return match.group(1)
-    return ""
+        for i in range(min(len(cells), num_cols)):
+            row_cells[i].text = cells[i].get_text(strip=True)
 
-# 解析题目并生成 docx 文档
-def generate_exam_paper(questions,output_file):
+# 新增：按顺序处理 richTextContent 中的内容
+def process_rich_text_content(doc, content):
+    soup = BeautifulSoup(content, 'html.parser')
+    current_directory = os.getcwd()
+    latex_image_path = os.path.join(current_directory, 'images')
+    os.makedirs(latex_image_path, exist_ok=True)
+
+    for elem in soup.children:
+        if isinstance(elem, NavigableString):
+            continue  # 跳过纯文本
+
+        # 段落处理
+        if elem.name == 'p':
+            if elem.find('span', attrs={"data-w-e-type": "formula"}):
+                span = elem.find('span', attrs={"data-w-e-type": "formula"})
+                latex_code = span.get('data-value', '')
+                if latex_code:
+                    image_path = generate_latex_image(latex_code, latex_image_path)
+                    if image_path:
+                        doc.add_picture(image_path)
+            elif elem.find('img'):
+                img_tag = elem.find('img')
+                img_url = img_tag.get('src')
+                if img_url and img_url.startswith("file://"):
+                    img_path = img_url.replace("file://", ".")
+                    insert_local_image(doc, img_path)
+            else:
+                text = elem.get_text().strip()
+                if text:
+                    doc.add_paragraph(text)
+
+        # 表格处理
+        elif elem.name == 'table':
+            insert_table_from_html(doc, str(elem))
+        
+
+def generate_exam_paper(questions, output_file):
     doc = Document()
 
     # 添加试卷信息
@@ -106,59 +126,24 @@ def generate_exam_paper(questions,output_file):
         elif question['type'] == '主观题':
             subjective_questions.append(question)
 
-    # 将题目插入文档
+    # 插入各类题目
     sections = [
         ('选择题', choice_questions),
         ('判断题', judgment_questions),
         ('填空题', fill_in_questions),
         ('主观题', subjective_questions)
     ]
-    
+
     for section_title, questions in sections:
-        if len(questions) > 0:
+        if questions:
             doc.add_paragraph(section_title)
-            for question in questions:
-                # 处理题目内容和 LaTeX
+            for idx, question in enumerate(questions, 1):
+                
                 if 'richTextContent' in question:
-                    latex_content = question['richTextContent']
-                    cleaned_latex = extract_latex_from_html(latex_content)  # 提取 LaTeX 内容
-                    # 提取 LaTeX 公式和其他文本
-                    other_text = re.sub(r'<[^>]+>', '', latex_content)  # 去除所有 HTML 标签，保留纯文本
-                    other_text = other_text.replace('\n', '')  # 去除换行符
-                    if other_text.strip():  # 仅当文本不为空时插入
-                        doc.add_paragraph(other_text)  # 插入纯文本部分
-                    
-                    if 'table' in latex_content:
-                        table_html = re.search(r'<table[^>]*>.*?</table>', latex_content, re.DOTALL)
-                        if table_html:
-                            insert_table_from_html(doc, table_html.group(0))
-                            
-                    # 渲染 LaTeX 公式并插入图像
-                    if cleaned_latex:  # 如果提取到 LaTeX 公式
-                        current_directory = os.getcwd()
-                        latex_image_path = os.path.join(current_directory, 'images')
-                        if not os.path.exists(latex_image_path):
-                            os.makedirs(latex_image_path)  # 确保图片文件夹存在
-                        image_path = generate_latex_image(cleaned_latex, latex_image_path)
-                        if image_path:
-                            doc.add_paragraph().add_run('图：').add_picture(image_path, width=Inches(2))
-                    if 'img' in latex_content:
-                        img_url = re.search(r'src="([^"]+)"', latex_content)
-                        if img_url:
-                            img_url = img_url.group(1)
-                            if img_url.startswith("file://"):  # 处理本地图片路径
-                                img_path = img_url.replace("file://", ".")
-                                insert_local_image(doc, img_path)
-                    
-
-                    
-                    
-                # 对于主观题，插入空行
+                    process_rich_text_content(doc, question['richTextContent'])
                 if question['type'] == '主观题':
-                    doc.add_paragraph('\n' * 4)  # 插入4行空白
+                    doc.add_paragraph('\n' * 4)  # 插入空白行用于作答
 
-    # 保存为 docx 文件
-    
     doc.save(output_file)
     return output_file
 
