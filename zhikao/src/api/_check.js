@@ -19,29 +19,25 @@ export function handleCheckAPI(ipcMain) {
             // 读取 JSON 格式的题目文件
             // let questions = await readPaperFile(filename);
             
-            // 将数据传递给 Python 脚本
-            const pythonScriptPath=path.resolve('./python','matplotlibphoto.py')
-            
-            // const jsonData = JSON.stringify(questions);
-            const filepath = path.resolve('../data/paper', filename); // 改成 path.resolve，拿到绝对路径
-            const docxname=filename+'.docx'
-            const outputDocxPath=path.resolve('../data',docxname)
-            console.log('Python file path:', pythonScriptPath);
+            // 将数据传递给 Python exe
+            const exePath = path.resolve('./python/dist', 'matplotlibphoto.exe');
+            const filepath = path.resolve('../data/paper', filename);
+            const docxname = filename + '.docx';
+            const outputDocxPath = path.resolve('../data', docxname);
+
+            console.log('EXE file path:', exePath);
             console.log('JSON file path:', filepath);
-            console.log('outputPath:',outputDocxPath)
-            exec(`python "${pythonScriptPath}" "${filepath}" "${outputDocxPath}"`, (err, stdout, stderr) => {
+            console.log('outputPath:', outputDocxPath);
+
+            exec(`"${exePath}" "${filepath}" "${outputDocxPath}"`, (err, stdout, stderr) => {
                 if (err) {
-                    console.error('Error executing Python script:', err);
+                    console.error('Error executing EXE file:', err);
                     return;
                 }
-                // console.log('Python script output:', stdout);
-                // // 接收并保存 Python 生成的 docx 文件
-                // let out = fs2.createWriteStream('../data/exam_paper' + filename + '.docx');
-                // out.write(stdout);
-                // out.on('close', function () {
-                //     console.log('Exam paper generated successfully as DOCX');
-                // });
+                console.log('stdout:', stdout);
+                console.error('stderr:', stderr);
             });
+
     
         } catch (e) {
             console.error('Error generating exam paper:', e);
