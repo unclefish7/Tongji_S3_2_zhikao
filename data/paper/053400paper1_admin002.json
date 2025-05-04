@@ -46,5 +46,11 @@
     "type": "判断题",
     "richTextContent": "<p><br></p><p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"{e}^{2}\"></span></p>",
     "score": 5
+  },
+  {
+    "id": "121",
+    "type": "选择题",
+    "richTextContent": "<p>分数填充</p>",
+    "score": 51
   }
 ]

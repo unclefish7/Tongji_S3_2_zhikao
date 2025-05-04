@@ -7,3 +7,6 @@ torch
 scipy
 numpy
 optimum
+matplotlib
+beautifulsoup4
+python-docx

@@ -1,0 +1,8 @@
+[
+  {
+    "id": 1,
+    "type": "主观题",
+    "richTextContent": "<p>测试公式</p><p><br></p><p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"\\left({x+a}\\right)^{2}=\\sum^{n}_{k=0}{\\left({^{n}_{k}}\\right){x}^{k}{a}^{n-k}}\"></span></p>",
+    "score": 1
+  }
+]
