@@ -32,6 +32,7 @@ pnpm-debug.log*
 /python/dist
 /python/model
 /python/similarity_check.exe
+/python/matplotlibphoto.exe
 
 # 试卷缓存
 /images
