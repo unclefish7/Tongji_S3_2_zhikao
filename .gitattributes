@@ -1,0 +1,2 @@
+/zhikao/python/matplotlibphoto.exe filter=lfs diff=lfs merge=lfs -text
+/zhikao/python/similarity_check.exe filter=lfs diff=lfs merge=lfs -text

@@ -20,7 +20,7 @@ export function handleCheckAPI(ipcMain) {
             // let questions = await readPaperFile(filename);
             
             // 将数据传递给 Python exe
-            const exePath = path.resolve('./python/dist', 'matplotlibphoto.exe');
+            const exePath = path.resolve('./python', 'matplotlibphoto.exe');
             const filepath = path.resolve('../data/paper', filename);
             const docxname = filename + '.docx';
             const outputDocxPath = path.resolve('../data', docxname);

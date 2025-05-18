@@ -149,7 +149,7 @@ export async function saveRichTextData(filename, data) {
 }
 
 // 封装 exec 为 Promise
-export function executePython(exePath, workingDir,inputFile,outputFile) {
+export function executeProgram(exePath, workingDir,inputFile,outputFile) {
     return new Promise((resolve, reject) => {
         const command = `"${exePath}" --input "${inputFile}" --output "${outputFile}"`; // 拼接带参数的命令
         exec(command, { cwd: workingDir }, (error, stdout, stderr) => {
@@ -263,7 +263,7 @@ export async function compareQuestionsAI(filename) {
     //调用python然后返回
     try {
         // 执行 Python 程序
-        await executePython(exePath, workingDir,inputPath,outputPath);
+        await executeProgram(exePath, workingDir,inputPath,outputPath);
 
         let similarityQuestions = [];
         // 检查 output.json 文件是否存在

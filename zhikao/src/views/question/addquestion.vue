@@ -177,6 +177,12 @@ export default {
       editorConfig,
       handleCreated,
       getEditorContent,
+      customPaste,     // ✅ 加上这一行！
+      customAlert,      // ✅ 同样你也用了 customAlert，也应该加上
+      handleChange,
+      handleDestroyed,
+      handleFocus,
+      handleBlur,
       isRegistered
     };
   },

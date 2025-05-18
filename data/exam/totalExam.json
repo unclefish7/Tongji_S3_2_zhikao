@@ -19,5 +19,12 @@
     "score": "100",
     "department": "计算机科学与技术",
     "duration": "1.5h"
+  },
+  {
+    "paperId": "paper1746339074458",
+    "name": "公式生成测试",
+    "score": "1",
+    "department": "1",
+    "duration": "1"
   }
 ]
