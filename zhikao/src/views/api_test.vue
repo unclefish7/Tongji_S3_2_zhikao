@@ -106,6 +106,13 @@
             inputs: [""],
             placeholders: ["试卷文件名"]
           },
+
+           generateAnswerSheet: {
+            fn: window.electronAPI.check.generateAnswerSheet,
+            inputs: [""],
+            placeholders: ["试卷文件名"]
+          },
+          
           checkQuestions: {
             fn: window.electronAPI.check.checkQuestions,
             inputs: [""],
@@ -116,7 +123,6 @@
             inputs: [""],
             placeholders: ["试卷文件名"]
           },
-  
           saveImage: {
             fn: window.electronAPI.saveImage,
             inputs: [""],
