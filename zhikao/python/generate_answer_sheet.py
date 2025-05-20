@@ -105,8 +105,11 @@ def generate_answer_sheet(questions, output_path):
             doc.add_paragraph(f'\n{title}')
             for idx, q in enumerate(items, 1):
                 doc.add_paragraph(f'{idx}.')
-                is_subjective = title in ['主观题', '填空题']
-                process_rich_text_for_answer(doc, q.get('richTextContent', ''), is_subjective=is_subjective)
+                if title in ['选择题', '判断题','填空题']:
+                    doc.add_paragraph('答：______________________________')
+                elif title in ['主观题']:
+                    for _ in range(6):  # 留出更多空白区域
+                        doc.add_paragraph()
 
     doc.save(output_path)
 
