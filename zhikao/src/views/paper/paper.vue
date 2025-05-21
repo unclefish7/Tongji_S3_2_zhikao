@@ -1,8 +1,8 @@
 <template>
   <el-main>
-    <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
+    <!-- <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button> -->
+    <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
     <template v-if="userType === 'admin'">
-      <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
       <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
     </template>
 
@@ -187,6 +187,7 @@ export default {
         this.userPapers = currentUser.papers_distributed || []; // 只针对临时用户有用
       }
       console.log("当前用户信息:", this.userType, this.userPapers);
+      // 直接获取所有本地试卷信息
       this.getAllData();
     });
       
@@ -302,13 +303,8 @@ export default {
     getAllData() {
       window.electronAPI.curriculum.readExamFile()
         .then(questions => {
-          if (this.userType === 'admin') {
-            // 管理员，显示所有
-            this.tableData = questions;
-          } else if (this.userType === 'temp') {
-            // 临时用户，只显示自己papers_distributed里有的
-            this.tableData = questions.filter(q => this.userPapers.includes(q.paperId));
-          }
+          // 不再根据用户类型过滤，直接显示所有试卷
+          this.tableData = questions;
         })
         .catch(error => {
           console.error('获取题目信息时出错:', error);
