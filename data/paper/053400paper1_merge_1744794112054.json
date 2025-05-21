@@ -3,13 +3,15 @@
     "id": "1",
     "type": "选择题",
     "richTextContent": "<p>丰川祥子是何时成为卡密的</p><p>A 11 &nbsp;B 12 &nbsp; &nbsp;C 13 &nbsp;D 14</p>",
-    "score": 5
+    "score": 5,
+    "answer": "<p> 手动插入答案</p>"
   },
   {
     "id": 2,
     "type": "判断题",
     "richTextContent": "<p>集合的交集运算满足交换律</p>",
-    "score": 5
+    "score": 5,
+    "answer": "<p>正确</p>"
   },
   {
     "id": 3,
@@ -69,6 +71,7 @@
     "id": 12,
     "type": "填空题",
     "richTextContent": "<p>分数填充_______________________</p>",
-    "score": 26
+    "score": 26,
+    "answer": "<p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"\\frac{-b\\pm\\sqrt{{b}^{2}-4ac}}{2a}\"></span></p>"
   }
 ]

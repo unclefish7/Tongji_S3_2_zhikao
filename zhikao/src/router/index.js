@@ -88,6 +88,11 @@ const routes = [
         name: 'editquestion',
         component: () => import('@/views/question/editquestion.vue'),
       },
+      {
+        path: '/editanswer',
+        name: 'editanswer',
+        component: () => import('@/views/question/editanswer.vue'),
+      },
     ]
   },
   {

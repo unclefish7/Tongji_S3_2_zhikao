@@ -45,6 +45,9 @@
             <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
           </el-popconfirm>
           <el-button type="success" @click="editQuestion(scope.row.id)" style="margin-left: 10px">修改 <i class="el-icon-document"></i></el-button>
+          <el-button type="warning" @click="editAnswer(scope.row.id)" style="margin-left: 10px">
+            答案 <i class="el-icon-edit-outline"></i>
+          </el-button>
         </template>
 
       </el-table-column>
@@ -81,6 +84,9 @@
             <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
           </el-popconfirm>
           <el-button type="success" @click="editQuestion(scope.row.id)" style="margin-left: 10px">修改 <i class="el-icon-document"></i></el-button>
+          <el-button type="warning" @click="editAnswer(scope.row.id)" style="margin-left: 10px">
+            答案 <i class="el-icon-edit-outline"></i>
+          </el-button>
         </template>
 
       </el-table-column>
@@ -117,6 +123,9 @@
             <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
           </el-popconfirm>
           <el-button type="success" @click="editQuestion(scope.row.id)" style="margin-left: 10px">修改 <i class="el-icon-document"></i></el-button>
+          <el-button type="warning" @click="editAnswer(scope.row.id)" style="margin-left: 10px">
+            答案 <i class="el-icon-edit-outline"></i>
+          </el-button>
         </template>
 
       </el-table-column>
@@ -152,6 +161,9 @@
               <el-button type="danger" style="margin-left: 10px" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
             </el-popconfirm>
           <el-button type="success" @click="editQuestion(scope.row.id)" style="margin-left: 10px">修改 <i class="el-icon-document"></i></el-button>
+          <el-button type="warning" @click="editAnswer(scope.row.id)" style="margin-left: 10px">
+            答案 <i class="el-icon-edit-outline"></i>
+          </el-button>
         </template>
 
       </el-table-column>
@@ -290,6 +302,10 @@ export default {
 
     editQuestion(questionId){
       this.$router.push({ path: '/editquestion', query: { paperId: this.paperId, questionId: questionId } });
+    },
+
+    editAnswer(questionId){
+      this.$router.push({ path: '/editanswer', query: { paperId: this.paperId, questionId: questionId } });
     },
 
     async deleteQuestion(id) {
