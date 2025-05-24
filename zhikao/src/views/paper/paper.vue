@@ -26,6 +26,9 @@
           <el-button type="primary" @click="viewpaper(scope.row.paperId, scope.row.score)">
             查看考卷
           </el-button>
+          <el-button @click="openAssignDialog(scope.row.paperId,scope.row.score)">
+            分配分数
+          </el-button>
         </template>
       </el-table-column>
       
@@ -137,6 +140,30 @@
         </div>
       </el-card>
     </el-dialog>
+    <el-dialog title="题目分配" :visible.sync="assignDialogVisible">
+      <el-form :model="assignForm" label-width="100px">
+        <el-form-item label="选择题">
+          <el-input-number v-model="assignForm.choice.count" :min="0" placeholder="题数"></el-input-number>
+          <el-input-number v-model="assignForm.choice.score" :min="0" placeholder="分数"></el-input-number>
+        </el-form-item>
+        <el-form-item label="判断题">
+          <el-input-number v-model="assignForm.judge.count" :min="0" placeholder="题数"></el-input-number>
+          <el-input-number v-model="assignForm.judge.score" :min="0" placeholder="分数"></el-input-number>
+        </el-form-item>
+        <el-form-item label="填空题">
+          <el-input-number v-model="assignForm.blank.count" :min="0" placeholder="题数"></el-input-number>
+          <el-input-number v-model="assignForm.blank.score" :min="0" placeholder="分数"></el-input-number>
+        </el-form-item>
+        <el-form-item label="主观题">
+          <el-input-number v-model="assignForm.subjective.count" :min="0" placeholder="题数"></el-input-number>
+          <el-input-number v-model="assignForm.subjective.score" :min="0" placeholder="分数"></el-input-number>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="assignDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="(submitAssign())">确 定</el-button>
+      </span>
+    </el-dialog>
   </el-main>
 </template>
 
@@ -168,7 +195,16 @@ export default {
       //表格数据绑定
       tableData: [],  
       selectedToMerge: [],
-      mergedTableData: []  
+      mergedTableData: [],
+      assignDialogVisible: false,
+      currentPaperId: null,
+      currentPaperScore: 0,
+      assignForm: {
+        choice: { count: 0, score: 0 },
+        judge: { count: 0, score: 0 },
+        blank: { count: 0, score: 0 },
+        subjective: { count: 0, score: 0 }
+      }  
     }
   },
   //该钩子函数执行时所有的DOM挂载和渲染都已完成，此时在该钩子函数中进行任何DOM操作都不 会有问题
@@ -187,7 +223,6 @@ export default {
         this.userPapers = currentUser.papers_distributed || []; // 只针对临时用户有用
       }
       console.log("当前用户信息:", this.userType, this.userPapers);
-      // 直接获取所有本地试卷信息
       this.getAllData();
     });
       
@@ -309,6 +344,46 @@ export default {
         .catch(error => {
           console.error('获取题目信息时出错:', error);
         });
+    },
+    openAssignDialog(paperId,paperScore) {
+      this.currentPaperId = paperId;
+      this.currentPaperScore=paperScore;
+      // 可选：初始化 assignForm
+      this.assignForm = {
+        choice: { count: 0, score: 0 },
+        judge: { count: 0, score: 0 },
+        blank: { count: 0, score: 0 },
+        subjective: { count: 0, score: 0 }
+      };
+      this.assignDialogVisible = true;
+    },
+    async submitAssign() {
+      const configList = [
+        { type: '选择题', count: this.assignForm.choice.count, score: this.assignForm.choice.score },
+        { type: '判断题', count: this.assignForm.judge.count, score: this.assignForm.judge.score },
+        { type: '填空题', count: this.assignForm.blank.count, score: this.assignForm.blank.score },
+        { type: '主观题', count: this.assignForm.subjective.count, score: this.assignForm.subjective.score }
+      ].filter(q => q.count > 0);
+    // 计算总分
+      const totalScore = configList.reduce((sum, q) => sum + (q.count * q.score), 0);
+      if (Number(totalScore) !== Number(this.currentPaperScore)) {
+        this.$message.error(`题目总分应为 ${this.currentPaperScore} 分，目前总分为 ${totalScore} 分`);
+        return;
+      }
+      const filename = this.currentPaperId + '.json';
+      let idCounter = 1;
+      for (const config of configList) {
+        for (let i = 0; i < config.count; i++) {
+          const data = {
+            id: idCounter++,
+            type: config.type,
+            richTextContent: '',
+            score: config.score
+          };
+          await window.electronAPI.paper.addQuestion(filename, data);
+        }
+      }
+      this.assignDialogVisible = false;
     }
   }
 }
