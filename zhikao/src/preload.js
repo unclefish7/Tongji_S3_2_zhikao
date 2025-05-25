@@ -18,7 +18,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     editUser: (username, password, data) => ipcRenderer.invoke('edit-user', username, password),
     loginUser: (username, password) => ipcRenderer.invoke('login-user', username, password),
     getUserInfo: () => ipcRenderer.invoke('get-user-info'),
-    
+    sendUser: () => ipcRenderer.invoke('user:sendUser'),
+    newUser: () => ipcRenderer.invoke('user:newUser'),
   },
   paper: {
     // 这里是与试卷和题目有关的接口，目标一个试卷一个文件，添加/修改题目的流程是，加载试卷，放到前端，修改/添加/删除，写回文件
