@@ -36,21 +36,21 @@
     "score": 10
   },
   {
-    "id": "11",
-    "type": "选择题",
-    "richTextContent": "<p>hsoahdagdk</p>",
-    "score": 0
-  },
-  {
     "id": "12",
     "type": "判断题",
-    "richTextContent": "<p><br></p><p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"{e}^{2}\"></span></p>",
+    "richTextContent": "<p>哈喽<span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"{e}^{2}\"></span></p>",
     "score": 5
   },
   {
     "id": "121",
     "type": "选择题",
-    "richTextContent": "<p>分数填充</p>",
-    "score": 51
+    "richTextContent": "<p>hello</p>",
+    "score": 50
+  },
+  {
+    "id": "1211",
+    "type": "填空题",
+    "richTextContent": "<p>hello234</p>",
+    "score": 1
   }
 ]

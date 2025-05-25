@@ -1,160 +1,140 @@
 import json
 import sys
 import os
+import shutil
+import tempfile
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Inches, Pt
+from docx.oxml.ns import qn
 import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib
 from bs4 import BeautifulSoup, NavigableString
+from bs4.element import Tag
 from matplotlib import rcParams
-import re
+from collections import defaultdict
 
-# 设置支持中文的字体
-rcParams['font.sans-serif'] = ['SimHei']  # 设置为黑体
-rcParams['axes.unicode_minus'] = False    # 解决负号显示问题
+# 设置中文字体支持
+rcParams['font.sans-serif'] = ['SimHei']
+rcParams['axes.unicode_minus'] = False
 
-# 用于处理 LaTeX 的图像生成
+DEFAULT_FONT_NAME = '宋体'
+ENGLISH_FONT_NAME = 'Times New Roman'
+DEFAULT_FORMULA_HEIGHT_PT = 14
+
 def generate_latex_image(latex_content, image_path):
     try:
-        # 使用 matplotlib 来渲染 LaTeX
-        latex_content = latex_content.replace('\\pix', '\\pi x')
+        if not latex_content.strip():
+            return None
         latex_content = latex_content.replace('\\pix', r'\pi x')
         fig, ax = plt.subplots()
         ax.axis('off')
-        text = ax.text(0.5, 0.5, f'${latex_content}$', fontsize=20, ha='center', va='center')
+        text = ax.text(0.5, 0.5, f'${latex_content}$', fontsize=DEFAULT_FORMULA_HEIGHT_PT,
+                       ha='center', va='center')
         fig.canvas.draw()
-        bbox = text.get_window_extent(renderer=fig.canvas.get_renderer())
-        # 转换像素到英寸，DPI=300
+        renderer = fig.canvas.get_renderer()
+        bbox = text.get_window_extent(renderer=renderer)
         width_inch = bbox.width / fig.dpi
         height_inch = bbox.height / fig.dpi
-        fig.set_size_inches(width_inch, height_inch)
-        image_file_path = os.path.join(image_path, 'latex_image.png')
+        fig.set_size_inches(max(width_inch, 0.5), max(height_inch, 0.3))
+
+        os.makedirs(image_path, exist_ok=True)
+        image_file_path = os.path.join(image_path, f'latex_{abs(hash(latex_content))}.png')
         plt.savefig(image_file_path, dpi=300, bbox_inches='tight', pad_inches=0.05)
         plt.close(fig)
-
         return image_file_path
     except Exception as e:
-        print(f"Error generating LaTeX image: {e}")
+        print(f"❌ 生成公式图片失败: {e}")
         return None
 
-def insert_local_image(doc, img_path):
-    # 如果图片是本地文件路径，直接插入
-    with open(img_path, 'rb') as f:
-        doc.add_paragraph().add_picture(f)  
+def set_font(run, is_title=False):
+    run.font.name = DEFAULT_FONT_NAME
+    run._element.rPr.rFonts.set(qn('w:eastAsia'), DEFAULT_FONT_NAME)
+    run._element.rPr.rFonts.set(qn('w:ascii'), ENGLISH_FONT_NAME)
+    run._element.rPr.rFonts.set(qn('w:hAnsi'), ENGLISH_FONT_NAME)
+    run.font.size = Pt(16 if is_title else 12)
+    run.bold = is_title
 
-# 处理表格插入
-def insert_table_from_html(doc, table_html):
-    soup = BeautifulSoup(table_html, "html.parser")
+def insert_table(doc, html):
+    soup = BeautifulSoup(html, 'html.parser')
     table_tag = soup.find('table')
     if not table_tag:
-        print("No table found in HTML.")
         return
     rows = table_tag.find_all('tr')
-    if not rows:
-        print("No rows found in table.")
-        return
-    first_row_cells = rows[0].find_all(['th', 'td'])
-    num_cols = len(first_row_cells)
-    table = doc.add_table(rows=0, cols=num_cols)
-    table.autofit = True
+    table = doc.add_table(rows=0, cols=len(rows[0].find_all(['td', 'th'])))
     for row in rows:
-        cells = row.find_all(['th', 'td'])
+        cells = row.find_all(['td', 'th'])
         row_cells = table.add_row().cells
-        for i in range(min(len(cells), num_cols)):
-            row_cells[i].text = cells[i].get_text(strip=True)
+        for i, cell in enumerate(cells):
+            row_cells[i].text = cell.get_text(strip=True)
+            para = row_cells[i].paragraphs[0]
+            if para.runs:
+                set_font(para.runs[0])
 
-# 新增：按顺序处理 richTextContent 中的内容
-def process_rich_text_content(doc, content):
+def process_rich_text(doc, content, image_dir):
     soup = BeautifulSoup(content, 'html.parser')
-    current_directory = os.getcwd()
-    latex_image_path = os.path.join(current_directory, 'images')
-    os.makedirs(latex_image_path, exist_ok=True)
+    for block in soup.find_all(['p', 'table', 'br']):
+        if block.name == 'p':
+            p = doc.add_paragraph()
+            for child in block.children:
+                if isinstance(child, NavigableString):
+                    if child.strip():
+                        run = p.add_run(str(child))
+                        set_font(run)
+                elif isinstance(child, Tag):
+                    if child.name == 'span' and child.get('data-w-e-type') == 'formula':
+                        latex_code = child.get('data-value', '')
+                        img_path = generate_latex_image(latex_code, image_dir)
+                        if img_path:
+                            p.add_run().add_picture(img_path, height=Inches(0.2))
+                    elif child.name == 'span':
+                        run = p.add_run(child.get_text())
+                        set_font(run)
+        elif block.name == 'table':
+            doc.add_paragraph()
+            insert_table(doc, str(block))
+            doc.add_paragraph()
+        elif block.name == 'br':
+            doc.add_paragraph()
 
-    for elem in soup.children:
-        if isinstance(elem, NavigableString):
-            continue  # 跳过纯文本
-
-        # 段落处理
-        if elem.name == 'p':
-            if elem.find('span', attrs={"data-w-e-type": "formula"}):
-                span = elem.find('span', attrs={"data-w-e-type": "formula"})
-                latex_code = span.get('data-value', '')
-                if latex_code:
-                    image_path = generate_latex_image(latex_code, latex_image_path)
-                    if image_path:
-                        doc.add_picture(image_path)
-            elif elem.find('img'):
-                img_tag = elem.find('img')
-                img_url = img_tag.get('src')
-                if img_url and img_url.startswith("file://"):
-                    img_path = img_url.replace("file://", ".")
-                    insert_local_image(doc, img_path)
-            else:
-                text = elem.get_text().strip()
-                if text:
-                    doc.add_paragraph(text)
-
-        # 表格处理
-        elif elem.name == 'table':
-            insert_table_from_html(doc, str(elem))
-        
-
-def generate_exam_paper(questions, output_file):
+def generate_docx(questions, output_path):
     doc = Document()
+    type_order = ['选择题', '判断题', '填空题', '主观题']
+    type_map = defaultdict(list)
+    for q in questions:
+        type_map[q['type']].append(q)
 
-    # 添加试卷信息
-    doc.add_paragraph('计算机科学与技术学院-研究生招生考试')
-    doc.add_paragraph('准考证考号：_______________  姓名：_______________')
-    doc.add_paragraph('总分数：_______________')
-    doc.add_paragraph('考试类型： 平时测试____  期中测试____  期末测试____  缺考____')
-    doc.add_paragraph('--------------------------------------------')
+    image_dir = tempfile.mkdtemp(prefix='latex_images_')
 
-    # 题目分类
-    choice_questions = []
-    judgment_questions = []
-    fill_in_questions = []
-    subjective_questions = []
+    try:
+        for qtype in type_order:
+            qlist = type_map[qtype]
+            if not qlist:
+                continue
+            total = sum(q.get('score', 0) for q in qlist)
+            avg = total / len(qlist) if qlist else 0
+            title = f"{qtype}（共{len(qlist)}题，合计{total}分，每题{avg:.1f}分）"
+            run = doc.add_paragraph().add_run(title)
+            set_font(run, is_title=True)
 
-    for question in questions:
-        if question['type'] == '选择题':
-            choice_questions.append(question)
-        elif question['type'] == '判断题':
-            judgment_questions.append(question)
-        elif question['type'] == '填空题':
-            fill_in_questions.append(question)
-        elif question['type'] == '主观题':
-            subjective_questions.append(question)
+            for q in qlist:
+                process_rich_text(doc, q.get('richTextContent', ''), image_dir)
+                if qtype == '主观题':
+                    for _ in range(3):
+                        doc.add_paragraph()
 
-    # 插入各类题目
-    sections = [
-        ('选择题', choice_questions),
-        ('判断题', judgment_questions),
-        ('填空题', fill_in_questions),
-        ('主观题', subjective_questions)
-    ]
+        doc.save(output_path)
+        print(f"✅ Word 试卷已生成：{output_path}")
+    finally:
+        shutil.rmtree(image_dir, ignore_errors=True)
 
-    for section_title, questions in sections:
-        if questions:
-            doc.add_paragraph(section_title)
-            for idx, question in enumerate(questions, 1):
-                
-                if 'richTextContent' in question:
-                    process_rich_text_content(doc, question['richTextContent'])
-                if question['type'] == '主观题':
-                    doc.add_paragraph('\n' * 4)  # 插入空白行用于作答
+if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print("用法: python export_exam.py questions.json output.docx")
+        sys.exit(1)
 
-    doc.save(output_file)
-    return output_file
+    input_json = sys.argv[1]
+    output_docx = sys.argv[2]
 
-if __name__ == "__main__":
-   
-    json_file_path=sys.argv[1]
-    docx_path=sys.argv[2]
-    
-    with open(json_file_path,'r',encoding='utf-8') as f:
-        data=json.load(f)
-    
-    # 生成考试试卷并保存
-    exam_paper_path = generate_exam_paper(data,docx_path)
-    print(f"Exam paper generated at {docx_path}")
+    with open(input_json, 'r', encoding='utf-8') as f:
+        questions = json.load(f)
+
+    generate_docx(questions, output_docx)
