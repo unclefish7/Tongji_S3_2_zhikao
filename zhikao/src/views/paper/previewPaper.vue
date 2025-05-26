@@ -57,10 +57,6 @@ export default {
     // 禁用页面滚动
     document.body.style.overflow = 'hidden'
   },
-  beforeDestroy() {
-    // 恢复页面滚动能力
-    document.body.style.overflow = 'auto'
-  },
   methods: {
     backPage() {
       this.$router.back()
