@@ -1,0 +1,68 @@
+[
+  {
+    "username": "admin001",
+    "data": {
+      "type": "admin",
+      "createDate": "2025年02月15日",
+      "createTimeStamp": 1739604505241,
+      "duration": ""
+    },
+    "salt": "cffd13be70912f0874e7604106ea27b8",
+    "hashedPassword": "350419ad6e1fc29d1127f4752854d4a463cee46ba8ddec8e9d9515ef9a55e2134f4cb7238da543ff61b6f8c97fdaa44a646ddec80b7b2e157d2dc561a7ae1a2b",
+    "papers_distributed": []
+  },
+  {
+    "username": "user003",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年03月09日",
+      "createTimeStamp": 1741499575507,
+      "duration": "14"
+    },
+    "salt": "5943a4cd3aa3993d01ded1ba5d3ae16b",
+    "hashedPassword": "44485d910ee50c7f7abb8c47d79e7e5dbff7d6305260c3fa3f97df5083f42437c6262a67f0ca77d4beba8f0aa17c8541f69b84e3877c9ee2417dd4ad07202c58",
+    "papers_distributed": [
+      "053400paper1",
+      "053400paper2",
+      "paper1741781270646"
+    ]
+  },
+  {
+    "username": "user004",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年03月12日",
+      "createTimeStamp": 1741761554918,
+      "duration": "3"
+    },
+    "salt": "15f267c1a20abf88ca0061359663dbf9",
+    "hashedPassword": "274cf6b6b71d7a576c13010d8d696fc5a2697094c85ac520848a249bd26d1060a114c9492851387b4cb76f0e6b6e93c5b76ac2a9d2641295347a26fdb52fb176",
+    "papers_distributed": [
+      "053400paper1"
+    ]
+  },
+  {
+    "username": "user005",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年05月25日",
+      "createTimeStamp": 1748139086313,
+      "duration": "14"
+    },
+    "salt": "4cb33703bdfd07581bf0ca9635284058",
+    "hashedPassword": "e3e51fcdb38042fac8da25e2bdfd3d022b2be1f9126c3d6bf1afe621f21c28dee291a488af79e1433e98c6d6ef8db2b427e9aab36ecd691fe7d0d5b53b05fd4d",
+    "papers_distributed": []
+  },
+  {
+    "username": "user006",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年05月25日",
+      "createTimeStamp": 1748145674886,
+      "duration": "14"
+    },
+    "salt": "fed55977850150782c9698a4d550f5b2",
+    "hashedPassword": "8beab1c9bcb2e467d64c6c2b4950b5d19e99d921cb364d2325681805ab065d7ddc9f104030c0ab25765d144a559612d88231b2ae7dd051b0d671a7494c102dad",
+    "papers_distributed": []
+  }
+]

@@ -3,7 +3,7 @@
     <el-button type="primary" size="small" @click="backPage()">返回</el-button>
     <el-button type="primary" size="small" @click="generatePaper()">试卷文件生成</el-button>
     <el-button type="success" size="small" @click="handleCheck" :disabled="loading">校验</el-button>
-
+    <el-button type="primary" size="small" @click="generateAnswerSheet()">试卷答题卡生成</el-button>
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <h3>相似性校验</h3>
       <div>
@@ -78,7 +78,6 @@
 </template>
 
 <script>
-import { Message } from 'element-ui';
 export default {
   methods: {
     backPage(){
@@ -89,6 +88,23 @@ export default {
         window.electronAPI.check.generateExamPaper(this.paperId +'.json');
         this.$message({
           message: "试卷生成成功",
+          type: "success",
+          showClose: true,
+        });
+      }
+      else{
+        this.$message({
+          message: "分数未达标，无法生成试卷",
+          type: "error",
+          showClose: true,
+        });
+      }
+    },
+    generateAnswerSheet(){
+      if(this.ifScore.includes("已达到")){
+        window.electronAPI.check.generateAnswerSheet(this.paperId +'.json');
+        this.$message({
+          message: "试卷答题卡生成成功",
           type: "success",
           showClose: true,
         });

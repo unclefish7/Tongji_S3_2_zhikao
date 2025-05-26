@@ -38,44 +38,19 @@
     </el-menu-item-group>
   </el-submenu>
 
-<!--
-  <el-submenu index="4">
-    <template slot="title">
-      <i class="el-icon-setting"></i>
-      <span>系统管理</span>
-    </template>
-    <el-menu-item-group>
-      <el-menu-item index="4-1" @click="$router.push('/usersystem')">
-        <i class="el-icon-user"></i>用户信息管理
-      </el-menu-item>
-      
-     
-    </el-menu-item-group>
-  </el-submenu>
-
-
-  <el-submenu index="5">
-    <template slot="title">
-      <i class="el-icon-document"></i>
-      <span>公告管理</span>
-    </template>
-    <el-menu-item-group>
-      <el-menu-item index="5-1" @click="$router.push('/showannounce')">
-        <i class="el-icon-s-finance"></i>公告
-        
-      </el-menu-item>
-      <el-menu-item index="5-2" @click="$router.push('/addannounce')">
-        <i class="el-icon-s-finance"></i>添加公告
-      </el-menu-item>
-      <el-menu-item index="5-3" @click="$router.push('/deleteannounce')">
-        <i class="el-icon-s-finance"></i>管理公告
-      </el-menu-item>
-    </el-menu-item-group>
-  </el-submenu>
--->
       </p>
         
-      <p v-else>
+      <p v-if="usertype === 'temp'">
+        <el-submenu index="1">
+          <template slot="title">
+            <i class="el-icon-document"></i>
+            <span>试卷管理</span>
+          </template>
+          <el-menu-item-group>
+            <el-menu-item index="1-1" @click="$router.push('/newuser')"><i class="el-icon-truck"></i>账户信息</el-menu-item>
+          </el-menu-item-group>
+        </el-submenu>
+
         <el-submenu index="2">
           <template slot="title">
             <i class="el-icon-document"></i>

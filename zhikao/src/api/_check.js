@@ -6,6 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const { exec, execFile } = require('child_process');
 
+const { ipcMain } = require('electron');
+
+
 
 
 import { readPaperFile, convertParsedDocumentToWord, compareQuestions, compareQuestionsAI, checkQuestionIntact } from './_utils';
@@ -42,6 +45,33 @@ export function handleCheckAPI(ipcMain) {
     
         } catch (e) {
             console.error('Error generating exam paper:', e);
+        }
+    });
+
+    ipcMain.handle('generate-answer-sheet', async (event, filename) => {
+        try {
+            console.log('准备生成答题卡：', filename);
+
+            const exePath = path.resolve('./python', 'generate_answer_sheet.exe'); // 你打包好的 .exe 文件名
+            const filepath = path.resolve('../data/paper', filename);
+            const outputDocxPath = path.resolve('../data', filename + '_answer_sheet.docx');
+
+            console.log('EXE path:', exePath);
+            console.log('Input JSON path:', filepath);
+            console.log('Output DOCX path:', outputDocxPath);
+
+            exec(`"${exePath}" "${filepath}" "${outputDocxPath}"`, (err, stdout, stderr) => {
+            if (err) {
+                console.error('答题卡生成失败:', err);
+                return;
+            }
+            console.log('答题卡生成完成');
+            console.log('stdout:', stdout);
+            console.error('stderr:', stderr);
+            });
+
+        } catch (e) {
+            console.error('执行生成答题卡命令时出错:', e);
         }
     });
     

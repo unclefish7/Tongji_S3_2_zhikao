@@ -1,49 +1,50 @@
 <template>
-    <el-main>
-      <el-button type="primary" size="small" @click="addUser()">新增用户</el-button>
-        <el-form :model="userForm" size="mini" label-width="80px">
-      </el-form>
-      <!--表格
-          data:数据绑定
-          height：只要在el-table元素中定义了height属性，即可实现固定表头的表格，而不需要额外的代码。
-          border：表格边框
-          prop：字段属性需要跟表格的数据对应
-          -->
-          <el-table 
-          :data="tableData.slice((currentpage1-1)*pagesize,currentpage1*pagesize)" :height="tableHeight" border style="width: 100%">
-            <el-table-column prop="username" label="用户名"></el-table-column>
-            <el-table-column prop="data.type" label="账号类型"></el-table-column>
-              <el-table-column prop="data.createDate" label="创建日期"></el-table-column>
-            <el-table-column prop="data.duration" label="账号有效时长（天）"></el-table-column>
-  
-            <el-table-column label="操作" width="280" >
-            <template slot-scope="scope">
+  <el-main>
+    <el-button type="primary" size="small" @click="addUser()">新增用户</el-button>
+    <el-button type="primary" size="small" @click="sendUser()">导出用户</el-button>
+    <el-form :model="userForm" size="mini" label-width="80px"></el-form>
+    <el-table
+      :data="tableData.slice((currentpage1-1)*pagesize, currentpage1*pagesize)"
+      :height="tableHeight"
+      border
+      style="width: 100%"
+    >
+      <el-table-column prop="username" label="用户名"></el-table-column>
+      <el-table-column prop="data.type" label="账号类型"></el-table-column>
+      <el-table-column prop="data.createDate" label="创建日期"></el-table-column>
+      <el-table-column prop="data.duration" label="账号有效时长（天）"></el-table-column>
 
-              <el-button type="success" @click="editUser(scope.row)" style="margin-left: 10px">修改<i class="el-icon-document"></i></el-button>
-            </template>
-            </el-table-column>
-      </el-table>
-  
-        <el-dialog title="组卷" :visible.sync="dialogFormVisible1" width="30%" :close-on-click-modal="false" >
-          <el-form label-width="100px" size="small" style="width:90%">
-            <el-form-item label="选择题数量">
-              <el-input v-model="form1.type1" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="判断题数量">
-              <el-input v-model="form1.type2"  autocomplete="off"></el-input>
-            </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="generate()">确定</el-button>
-            <el-button @click="dialogFormVisible1 = false">取消</el-button>
-          </div>
-        </el-dialog>
-  
-        
-    <!-- 分页组件-->
-          
-      </el-main>
-      </template>
+      <el-table-column label="操作" width="280">
+        <template slot-scope="scope">
+            <el-button
+              type="success"
+              @click="editUser(scope.row)"
+              style="margin-left: 10px"
+            >修改<i class="el-icon-document"></i></el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog
+      title="组卷"
+      :visible.sync="dialogFormVisible1"
+      width="30%"
+      :close-on-click-modal="false"
+    >
+      <el-form label-width="100px" size="small" style="width:90%">
+        <el-form-item label="选择题数量">
+          <el-input v-model="form1.type1" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="判断题数量">
+          <el-input v-model="form1.type2" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="generate()">确定</el-button>
+        <el-button @click="dialogFormVisible1 = false">取消</el-button>
+      </div>
+    </el-dialog>
+  </el-main>
+</template>
       <script>
       import axios from "axios"
         export default {
@@ -87,6 +88,14 @@
            addUser(){
             this.$router.push('/adduser')
            },
+          async sendUser() {
+            const result = await window.electronAPI.user.sendUser();
+            if (result.success) {
+              this.$message.success('用户信息已成功发送！');
+            } else {
+              this.$message.error('发送失败: ' + result.error);
+            }
+          },
            editUser(userInfo){
             this.$router.push({ path: '/edituser', query: { user: userInfo } })
            },
