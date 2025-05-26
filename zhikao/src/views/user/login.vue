@@ -15,7 +15,10 @@
           
       </div>
       <!-- 悬浮的 API 测试按钮 -->
-      <el-button type="info" class="api-test-btn" @click="goToApiTest">API 测试</el-button>
+      <div style="display: flex; gap: 10px;">
+        <el-button type="info" class="api-test-btn" style="margin-right: 10px;" @click="goToApiTest">API 测试</el-button>
+        <el-button type="info" class="api-test-btn" style="margin-right: 1400px;" @click="newUser()">导入用户</el-button>
+      </div>
     </div>
   </template>
   
@@ -66,6 +69,16 @@
 
       login() {       
         this.$router.push('/')
+      },
+      
+      async newUser() {
+          const result = await window.electronAPI.user.newUser();
+          if (result.success) {
+          this.$message.success('用户信息导入成功！');
+          location.reload(); // 可选：重新加载页面
+          } else {
+          this.$message.error('导入失败: ' + result.error);
+          }
       },
 
       async loginUserTest() {
