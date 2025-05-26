@@ -93,6 +93,11 @@ const routes = [
         name: 'editanswer',
         component: () => import('@/views/question/editanswer.vue'),
       },
+      {
+        path: '/previewPaper',
+        name: 'previewPaper',
+        component: () => import('@/views/paper/previewPaper.vue'),
+      },
     ]
   },
   {

@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup, NavigableString
 from bs4.element import Tag
 from matplotlib import rcParams
 from collections import defaultdict
+import base64
+import subprocess
 
 # 设置中文字体支持
 rcParams['font.sans-serif'] = ['SimHei']
@@ -126,15 +128,80 @@ def generate_docx(questions, output_path):
     finally:
         shutil.rmtree(image_dir, ignore_errors=True)
 
+def generate_docx_to_pdf_base64(questions: list, soffice_path: str) -> str:
+    """
+    生成 Word 文档并转换为 base64 编码的 PDF 字节串，用于前端内嵌预览。
+    - questions: 题目列表
+    - soffice_path: LibreOffice 可执行路径（soffice.exe）
+    - 返回: base64 编码字符串，可用于 src="data:application/pdf;base64,..."
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        docx_path = os.path.join(tmpdir, "temp.docx")
+        pdf_path = os.path.join(tmpdir, "temp.pdf")
+
+        # ✅ 生成 Word 文档
+        generate_docx(questions, docx_path)
+
+        # ✅ 使用 LibreOffice 转换成 PDF
+        result = subprocess.run([
+            soffice_path,
+            "--headless", "--convert-to", "pdf",
+            "--outdir", tmpdir,
+            docx_path
+        ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            print(f"❌ LibreOffice 转换失败: {result.stderr.decode()}")
+            sys.exit(1)
+
+        # ✅ 读取 PDF 内容并转 base64
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        return base64.b64encode(pdf_bytes).decode('utf-8')
+    
+def get_soffice_path():
+    if getattr(sys, 'frozen', False):  # PyInstaller 打包后运行
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # ➕ 回到项目根目录，然后拼接 LibreOfficePortable 路径
+    root_dir = os.path.abspath(os.path.join(base_dir, "..", ".."))
+    return os.path.join(root_dir, "LibreOfficePortable", "App", "libreoffice", "program", "soffice.exe")
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print("用法: python export_exam.py questions.json output.docx")
+        print("用法：")
+        print("  👉 生成 Word：python export_exam.py questions.json output.docx")
+        print("  👉 生成预览：python export_exam.py questions.json preview [base64_output.txt]")
         sys.exit(1)
 
     input_json = sys.argv[1]
-    output_docx = sys.argv[2]
+    mode_or_output = sys.argv[2]
 
     with open(input_json, 'r', encoding='utf-8') as f:
         questions = json.load(f)
 
-    generate_docx(questions, output_docx)
+    if mode_or_output == 'preview':
+        # ✔️ 进入预览模式
+        base64_output_path = sys.argv[3] if len(sys.argv) >= 4 else None
+        soffice_path = get_soffice_path()
+        if not os.path.exists(soffice_path):
+            print(f"❌ LibreOffice 可执行文件未找到: {soffice_path}")
+            sys.exit(1)
+
+        base64_pdf = generate_docx_to_pdf_base64(questions, soffice_path)
+
+        if base64_output_path:
+            with open(base64_output_path, "w", encoding="utf-8") as f:
+                f.write(base64_pdf)
+            print(f"✅ PDF 预览 base64 已写入: {base64_output_path}")
+        else:
+            print("data:application/pdf;base64," + base64_pdf)
+    else:
+        # ✔️ 正常导出 Word
+        output_docx = mode_or_output
+        generate_docx(questions, output_docx)
+
+
+

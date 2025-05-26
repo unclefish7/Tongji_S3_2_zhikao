@@ -56,6 +56,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     generateExamPaper: (filename) => ipcRenderer.invoke('generate-exam-paper', filename),
     checkQuestions: (filename) => ipcRenderer.invoke('check-questions', filename),
     checkQuestionsAI: (filename) => ipcRenderer.invoke('check-questions-AI', filename),
+    generatePreviewPDF: (jsonPath) => ipcRenderer.invoke('generate-preview-pdf', jsonPath),
   },
   //saveImage: (imageData) => ipcMain.invoke('saveImage', imageData)
   saveImage: (imageData) => ipcRenderer.invoke('save-image', imageData),

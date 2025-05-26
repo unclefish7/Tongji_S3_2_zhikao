@@ -5,7 +5,7 @@
       <el-button type="primary" size="small" @click="backPage()">返回</el-button>
       <el-button type="primary" size="small" @click="addquestion()">添加题目</el-button>
       <el-button type="primary" size="small" @click="checkpaper()">试卷校验</el-button>
-      <!--el-button type="primary" size="small" @click="yulan()">试卷预览</el-button-->
+      <el-button type="primary" size="small" @click="previewPaper()">试卷预览</el-button>
       <span>总分 {{this.score}}/{{this.allscore}}</span>
     </div>
     <!--表格
@@ -314,6 +314,10 @@ export default {
         await this.getAllData();
         location.reload();
       }
+    },
+
+    previewPaper(){
+      this.$router.push({ path: '/previewPaper', query: { paperId: this.paperId} })
     },
 
     handleSizeChange(val){

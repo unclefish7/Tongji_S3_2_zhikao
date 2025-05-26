@@ -2,8 +2,9 @@ const officegen = require('officegen');
 const parse5 = require('parse5');
 
 const fs2 = require('fs');
+const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 
 
 
@@ -69,4 +70,33 @@ export function handleCheckAPI(ipcMain) {
         console.log(dataJson)
         return dataJson;
     });
+
+    // 注册 IPC 接口：从 JSON 文件生成 PDF base64
+    function handleReadBase64File(base64OutputPath, resolve, reject) {
+        fs.readFile(base64OutputPath, 'utf-8', (err, data) => {
+            if (err) {
+                console.error('❌ 无法读取 base64 输出文件:', err);
+                return reject(new Error('读取失败'));
+            }
+            resolve(data);  // base64 字符串
+        });
+    }
+    function handleExecFileCallback(base64OutputPath, resolve, reject) {
+        return (error, stdout, stderr) => {
+            if (error) {
+                console.error('❌ 执行出错:', error);
+                return reject(new Error('生成失败'));
+            }
+            handleReadBase64File(base64OutputPath, resolve, reject);
+        };
+    }
+    ipcMain.handle('generate-preview-pdf', async (event, jsonPath) => {
+        return new Promise((resolve, reject) => {
+            const exePath = path.resolve('./python', 'matplotlibphoto.exe');
+            const base64OutputPath = path.resolve('../data/transformer', 'base64.txt');
+            const args = [jsonPath, 'preview', base64OutputPath];
+            execFile(exePath, args, handleExecFileCallback(base64OutputPath, resolve, reject));
+        });
+    });
+
 }
