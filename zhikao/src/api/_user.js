@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const fs = require('fs').promises;
+const fsSync = require('fs'); // 专门用于同步方法
 const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
@@ -8,6 +9,30 @@ import { readUserFile, writeUserFile, findUserInfo } from './_utils';
 
 
 export function handleUserAPI(ipcMain) {
+    ipcMain.handle('user:sendUser', async () => {
+        const srcPath = path.join(process.cwd(), '../data/user/user.json');
+        const destPath = path.join(process.cwd(), '/user/user.json');
+        try {
+            fsSync.copyFileSync(srcPath, destPath);
+            return { success: true };
+        } catch (err) {
+            console.error('sendUser error:', err);
+            return { success: false, error: err.message };
+        }
+    });
+    // 导入用户数据
+    ipcMain.handle('user:newUser', async () => {
+        const srcPath = path.join(process.cwd(), '/user_reading/user.json');
+        const destPath = path.join(process.cwd(), '../data/user/user.json');
+        try {
+            fsSync.copyFileSync(srcPath, destPath);
+            return { success: true };
+        } catch (err) {
+            console.error('newUser error:', err);
+            return { success: false, error: err.message };
+        }
+    });
+
     ipcMain.handle('register-user', async (event, username, password, data) => {
         const salt = crypto.randomBytes(16).toString('hex');
         const iterations = 1000;
