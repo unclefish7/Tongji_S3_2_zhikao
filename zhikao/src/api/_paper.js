@@ -209,6 +209,19 @@ export function handlePaperAPI(ipcMain) {
         }
     });
 
+    ipcMain.handle('clearPaperFile', async (event, paperId) => {
+        const paperFilePath = path.join('../data/paper/', `${paperId}.json`);
+        try {
+            // 将文件内容重置为空数组
+            await fs.writeFile(paperFilePath, '[]', 'utf8');
+            console.log(`Paper file ${paperId} cleared successfully`);
+            return { success: true };
+        } catch (error) {
+            console.error('Error clearing paper file:', error);
+            return { success: false, message: 'Failed to clear paper file' };
+        }
+    });
+
     ipcMain.handle('updatePaperPermissions', async (event, paperId, userList) => {
         try {
             // 使用 readUserFile 函数读取用户数据文件

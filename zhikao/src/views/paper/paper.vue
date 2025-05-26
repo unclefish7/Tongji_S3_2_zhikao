@@ -345,7 +345,7 @@ export default {
           console.error('获取题目信息时出错:', error);
         });
     },
-    openAssignDialog(paperId,paperScore) {
+    async openAssignDialog(paperId,paperScore) {
       this.currentPaperId = paperId;
       this.currentPaperScore=paperScore;
       // 可选：初始化 assignForm
@@ -355,6 +355,47 @@ export default {
         blank: { count: 0, score: 0 },
         subjective: { count: 0, score: 0 }
       };
+      try {
+        const filename = `${paperId}.json`;
+        const questions = await window.electronAPI.paper.readPaperFile(filename);
+
+        const typeMap = {
+          '选择题': 'choice',
+          '判断题': 'judge',
+          '填空题': 'blank',
+          '主观题': 'subjective'
+        };
+
+        const typeStats = {
+          choice: [],
+          judge: [],
+          blank: [],
+          subjective: []
+        };
+
+        // 分类统计
+        questions.forEach(q => {
+          const key = typeMap[q.type];
+          if (key) {
+            typeStats[key].push(q.score || 0);
+          }
+        });
+
+        // 填入 assignForm
+        Object.keys(typeStats).forEach(key => {
+          const scores = typeStats[key];
+          const count = scores.length;
+          const totalScore = scores.reduce((sum, s) => sum + s, 0);
+          const avgScore = count > 0 ? Math.round(totalScore / count) : 0;
+
+          this.assignForm[key].count = count;
+          this.assignForm[key].score = avgScore;  // 可以改为 totalScore / count 或者 totalScore / count 保留小数
+        });
+
+      } catch (err) {
+        console.error('读取题目出错:', err);
+        this.$message.error('读取题目出错');
+      }
       this.assignDialogVisible = true;
     },
     async submitAssign() {
@@ -371,6 +412,11 @@ export default {
         return;
       }
       const filename = this.currentPaperId + '.json';
+      const cleared = await window.electronAPI.paper.clearPaperFile(this.currentPaperId);
+      if (!cleared) {
+        this.$message.error('清空原试卷失败，请检查文件权限或路径');
+        return;
+      }
       let idCounter = 1;
       for (const config of configList) {
         for (let i = 0; i < config.count; i++) {

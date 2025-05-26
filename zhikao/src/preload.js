@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addPaper: (data) => ipcRenderer.invoke('addPaper', data),
     editPaper: (paperId, updatedData) => ipcRenderer.invoke('editPaper', paperId, updatedData),
     deletePaper: (paperId) => ipcRenderer.invoke('deletePaper', paperId),
+    clearPaperFile: (paperId) => ipcRenderer.invoke('clearPaperFile', paperId),
     updatePaperPermissions: (paperId, userList) => ipcRenderer.invoke('updatePaperPermissions', paperId, userList),
     listAllPaperFiles: () => ipcRenderer.invoke('paper:listAllPaperFiles'),
     writePaperFile: (filename, data) => ipcRenderer.invoke('paper:writePaperFile', filename, data),
