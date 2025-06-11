@@ -6,6 +6,7 @@
       <el-button type="primary" size="small" @click="addquestion()">添加题目</el-button>
       <el-button type="primary" size="small" @click="checkpaper()">试卷校验</el-button>
       <el-button type="primary" size="small" @click="previewPaper()">试卷预览</el-button>
+      <el-button type="success" size="small" @click="exportPaper()">导出考卷</el-button>
       <span>总分 {{this.score}}/{{this.allscore}}</span>
     </div>
     <!--表格
@@ -318,6 +319,20 @@ export default {
 
     previewPaper(){
       this.$router.push({ path: '/previewPaper', query: { paperId: this.paperId} })
+    },
+
+    async exportPaper() {
+      try {
+        const result = await window.electronAPI.paper.exportPaper(this.paperId);
+        if (result.success) {
+          this.$message.success(`试卷导出成功！文件保存在：${result.filePath}`);
+        } else {
+          this.$message.error('导出失败：' + result.message);
+        }
+      } catch (error) {
+        console.error('导出试卷时出错:', error);
+        this.$message.error('导出失败，请重试');
+      }
     },
 
     handleSizeChange(val){

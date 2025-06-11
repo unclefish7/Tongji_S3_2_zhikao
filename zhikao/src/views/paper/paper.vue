@@ -1,6 +1,6 @@
 <template>
   <el-main>
-    <!-- <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button> -->
+    <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
     <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
     <template v-if="userType === 'admin'">
       <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
@@ -59,13 +59,6 @@
           </el-button>
           
           <template v-if="userType === 'admin'">
-            <el-button 
-              type="warning" 
-              @click="assignPaper(scope.row.paperId)" 
-              style="margin-left: 10px"
-            >
-              分配 <i class="el-icon-user-solid"></i>
-            </el-button>
             <el-button 
               type="info" 
               :style="{
@@ -315,11 +308,8 @@ export default {
       this.$router.push({ path: '/addpaper', query: { curriculumId: this.curriculumId } })
     },
     importPaper() {
-      // 这是新增的导入试卷逻辑
-      console.log('点击了导入试卷按钮');
-      // 你可以在这里打开弹窗、上传文件，或者跳转到新页面
-      // 例如跳转到另一个界面：
-      this.$router.push('/importpaper');
+      // 直接调用导入接口，打开文件选择对话框
+      this.importPaperFile();
     },
     viewpaper(paperId, score){
       this.$router.push({ path: '/question', query: { id: paperId , score: score} });
@@ -327,9 +317,6 @@ export default {
     editpaper(paperId){
       console.log(paperId)
       this.$router.push({ path: '/editpaper', query: { paperId: paperId} });
-    },
-    assignPaper(paperId){
-      this.$router.push({ path: '/assignpaper', query: { paperId: paperId} });
     },
     takepaper(ID){
       this.form1={type1:2,type2:2,paperId:ID}
@@ -430,6 +417,21 @@ export default {
         }
       }
       this.assignDialogVisible = false;
+    },
+
+    async importPaperFile() {
+      try {
+        const result = await window.electronAPI.paper.importPaperFromDialog();
+        if (result.success) {
+          this.$message.success('导入成功！');
+          await this.getAllData(); // 刷新试卷列表
+        } else {
+          this.$message.error('导入失败：' + result.message);
+        }
+      } catch (error) {
+        console.error('导入试卷时出错:', error);
+        this.$message.error('导入失败，请重试');
+      }
     }
   }
 }

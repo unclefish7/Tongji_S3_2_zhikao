@@ -67,6 +67,86 @@ export function handlePaperAPI(ipcMain) {
         return readPaperFile(filename);
     });
 
+    ipcMain.handle('paper:importPaperFromDialog', async (event) => {
+        try {
+            const { dialog } = require('electron');
+            
+            // 打开文件选择对话框
+            const result = await dialog.showOpenDialog({
+                properties: ['openFile'],
+                filters: [
+                    { name: 'JSON Files', extensions: ['json'] }
+                ]
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: false, message: '用户取消了文件选择' };
+            }
+
+            const filePath = result.filePaths[0];
+            const rawContent = await fs.readFile(filePath, 'utf8');
+            
+            let parsedContent;
+            try {
+                parsedContent = JSON.parse(rawContent);
+            } catch (err) {
+                console.error('导入失败，文件内容不是合法的 JSON: ', err);
+                return { success: false, message: '导入失败：文件内容不是合法的 JSON。' };
+            }
+
+            // 检查导入文件格式
+            if (!parsedContent.info || !parsedContent.info.paperId) {
+                return { success: false, message: '导入失败：缺少必要的 info.paperId 字段。' };
+            }
+
+            if (!Array.isArray(parsedContent.questions)) {
+                return { success: false, message: '导入失败：questions 字段不存在或格式错误。' };
+            }
+
+            const { paperId: originalPaperId, name, score, department, duration } = parsedContent.info;
+
+            // 读取现有试卷信息，检查是否有重名
+            const totalExamData = await readExamFile();
+            
+            // 处理重名冲突
+            let finalPaperId = originalPaperId;
+            let finalName = name;
+            let counter = 1;
+            
+            while (totalExamData.some(entry => entry.paperId === finalPaperId)) {
+                finalPaperId = `${originalPaperId}_copy${counter}`;
+                finalName = `${name}_副本${counter}`;
+                counter++;
+            }
+
+            // 保存试卷题目到 paper 文件夹
+            const destFileName = `${finalPaperId}.json`;
+            const destPath = path.join(process.cwd(), '../data/paper', destFileName);
+            await fs.writeFile(destPath, JSON.stringify(parsedContent.questions, null, 2), 'utf8');
+
+            // 更新 totalExam.json，增加一条记录
+            totalExamData.push({
+                paperId: finalPaperId,
+                name: finalName || '未命名试卷',
+                score: score || '未知分数',
+                department: department || '未知部门',
+                duration: duration || '未知时长'
+            });
+            
+            const totalExamPath = path.join(process.cwd(), '../data/exam/totalExam.json');
+            await fs.writeFile(totalExamPath, JSON.stringify(totalExamData, null, 2), 'utf8');
+
+            const message = finalPaperId !== originalPaperId 
+                ? `导入成功！原试卷已存在，新试卷已重命名为：${finalName}`
+                : '导入成功！';
+
+            return { success: true, message };
+        } catch (error) {
+            console.error('Error importing paper:', error);
+            return { success: false, message: '导入失败：内部错误。' };
+        }
+    });
+
     ipcMain.handle('paper:importPaperFile', async (event, filePath, userName) => {
         try {
             const rawContent = await fs.readFile(filePath, 'utf8');
@@ -307,6 +387,54 @@ export function handlePaperAPI(ipcMain) {
         existing.push(metaEntry);
         await fs.writeFile(filePath, JSON.stringify(existing, null, 2), 'utf8');
         return { success: true };
+    });
+
+    ipcMain.handle('paper:exportPaper', async (event, paperId) => {
+        try {
+            // 读取试卷题目
+            const questions = await readPaperFile(`${paperId}.json`);
+            
+            // 读取试卷元信息
+            const examMeta = await readExamFile();
+            const paperInfo = examMeta.find(exam => exam.paperId === paperId);
+            
+            if (!paperInfo) {
+                return { success: false, message: '未找到试卷信息' };
+            }
+
+            // 构建导出数据结构
+            const exportData = {
+                info: {
+                    paperId: paperInfo.paperId,
+                    name: paperInfo.name,
+                    score: paperInfo.score,
+                    department: paperInfo.department,
+                    duration: paperInfo.duration
+                },
+                questions: questions
+            };
+
+            // 生成导出文件名（添加时间戳）
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const exportFileName = `${paperInfo.name}_${timestamp}.json`;
+            
+            // 确保导出目录存在
+            const exportDir = path.join(process.cwd(), '../data/export');
+            await fs.mkdir(exportDir, { recursive: true });
+            
+            // 保存文件
+            const exportPath = path.join(exportDir, exportFileName);
+            await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2), 'utf8');
+            
+            return { 
+                success: true, 
+                message: '导出成功',
+                filePath: exportPath
+            };
+        } catch (error) {
+            console.error('Error exporting paper:', error);
+            return { success: false, message: '导出失败：' + error.message };
+        }
     });
       
 }

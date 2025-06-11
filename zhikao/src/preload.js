@@ -47,6 +47,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     writeAdminPaperFile: (filename, data) => ipcRenderer.invoke('paper:writeAdminPaperFile', filename, data),
     readTotalExamMeta: () => ipcRenderer.invoke('paper:readTotalExamMeta'),
     addMergedPaperMeta: (meta) => ipcRenderer.invoke('paper:addMergedPaperMeta', meta),
+    exportPaper: (paperId) => ipcRenderer.invoke('paper:exportPaper', paperId),
+    importPaperFromDialog: () => ipcRenderer.invoke('paper:importPaperFromDialog'),
   },
   curriculum: {
     readTotalCurriculumFile: () => ipcRenderer.invoke('readTotalCurriculumFile'),
