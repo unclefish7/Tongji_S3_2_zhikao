@@ -120,6 +120,10 @@ def insert_table(doc, html):
         return
     rows = table_tag.find_all('tr')
     table = doc.add_table(rows=0, cols=len(rows[0].find_all(['td', 'th'])))
+    
+    # 设置表格样式为带边框的表格
+    table.style = 'Table Grid'
+    
     for row in rows:
         cells = row.find_all(['td', 'th'])
         row_cells = table.add_row().cells
@@ -129,11 +133,21 @@ def insert_table(doc, html):
             if para.runs:
                 set_font(para.runs[0])
 
-def process_rich_text(doc, content, image_dir):
+def process_rich_text(doc, content, image_dir, question_number=None):
     soup = BeautifulSoup(content, 'html.parser')
+    first_paragraph = True
+    
     for block in soup.find_all(['p', 'table', 'br']):
         if block.name == 'p':
             p = doc.add_paragraph()
+            
+            # 如果是第一个段落且有题目序号，先添加序号
+            if first_paragraph and question_number is not None:
+                number_run = p.add_run(f"{question_number}、")
+                set_font(number_run)
+                number_run.bold = True
+                first_paragraph = False
+            
             for child in block.children:
                 if isinstance(child, NavigableString):
                     if child.strip():
@@ -291,23 +305,41 @@ def generate_docx(questions, output_path, input_file_path=None):
     print(f"临时图片目录: {image_dir}")
 
     try:
+        # 题目总序号计数器
+        question_number = 1
+        # 题型序号映射
+        type_chinese_numbers = ['一', '二', '三', '四']
+        type_index = 0
+        
         for qtype in type_order:
             qlist = type_map[qtype]
             if not qlist:
                 continue
             total = sum(q.get('score', 0) for q in qlist)
             avg = total / len(qlist) if qlist else 0
-            title = f"{qtype}（共{len(qlist)}题，合计{total}分，每题{avg:.1f}分）"
+            
+            # 添加题型标题，包含中文序号
+            title = f"{type_chinese_numbers[type_index]}、{qtype}（共{len(qlist)}题，合计{total}分，每题{avg:.1f}分）"
             run = doc.add_paragraph().add_run(title)
             set_font(run, is_title=True)
             print(f"处理题目类型: {qtype}, 共 {len(qlist)} 题")
+            type_index += 1
 
             for q in qlist:
-                print(f"  处理题目 ID {q.get('id', '未知')}")
-                process_rich_text(doc, q.get('richTextContent', ''), image_dir)
+                print(f"  处理题目 ID {q.get('id', '未知')}, 序号: {question_number}")
+                
+                # 添加题目前的换行
+                doc.add_paragraph()
+                
+                # 处理题目内容，传入题目序号
+                process_rich_text(doc, q.get('richTextContent', ''), image_dir, question_number)
+                
+                # 为主观题添加额外空行
                 if qtype == '主观题':
                     for _ in range(3):
                         doc.add_paragraph()
+                
+                question_number += 1
 
         doc.save(output_path)
         print(f"✅ Word 试卷已生成：{output_path}")
