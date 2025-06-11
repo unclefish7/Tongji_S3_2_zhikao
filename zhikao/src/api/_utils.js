@@ -528,3 +528,43 @@ export function convertParsedDocumentToWord(docx, document) {
         });
     }
 }
+
+/**
+ * 保存图片文件到指定目录
+ * @param {string} sourceFilePath 源文件路径
+ * @returns {Promise<string>} 返回保存后的相对路径
+ */
+export async function saveImage(sourceFilePath) {
+    try {
+        console.log("开始保存图片:", sourceFilePath);
+        
+        // 获取文件名和扩展名
+        const originalFileName = path.basename(sourceFilePath);
+        const ext = path.extname(originalFileName);
+        const nameWithoutExt = path.basename(originalFileName, ext);
+        
+        // 生成带时间戳的唯一文件名
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const newFileName = `${nameWithoutExt}_${timestamp}_${randomSuffix}${ext}`;
+        
+        // 确保目标目录存在
+        const targetFolder = path.resolve('./src/img');
+        await fs.mkdir(targetFolder, { recursive: true });
+        
+        const targetPath = path.join(targetFolder, newFileName);
+        console.log("目标路径:", targetPath);
+        
+        // 复制文件到目标目录
+        await fs.copyFile(sourceFilePath, targetPath);
+        
+        // 返回相对路径（用于前端访问）
+        const relativePath = path.join('./src/img', newFileName).replace(/\\/g, '/');
+        console.log("保存成功，相对路径:", relativePath);
+        
+        return relativePath;
+    } catch (error) {
+        console.error('保存图片失败:', error);
+        throw new Error(`图片保存失败: ${error.message}`);
+    }
+}

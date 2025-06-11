@@ -64,7 +64,7 @@ def read_encrypted_file(file_path):
             if decrypted_content:
                 return json.loads(decrypted_content)
             else:
-                raise Exception("解密失败")
+                raise ValueError("解密失败")
         else:
             # 向后兼容：如果不是加密格式，直接解析JSON
             return json.loads(content)
@@ -145,6 +145,22 @@ def process_rich_text(doc, content, image_dir):
                         img_path = generate_latex_image(latex_code, image_dir)
                         if img_path:
                             p.add_run().add_picture(img_path, height=Inches(0.2))
+                    elif child.name == 'img':
+                        # 处理编辑器中的图片
+                        img_src = child.get('src', '')
+                        if img_src:
+                            processed_img_path = process_image_src(img_src)
+                            if processed_img_path and os.path.exists(processed_img_path):
+                                try:
+                                    # 获取图片尺寸信息
+                                    width_style = child.get('style', '')
+                                    img_width = extract_image_width(width_style)
+                                    p.add_run().add_picture(processed_img_path, width=img_width)
+                                except Exception as e:
+                                    print(f"插入图片失败: {e}")
+                                    # 插入错误提示文本
+                                    run = p.add_run("[图片加载失败]")
+                                    set_font(run)
                     elif child.name == 'span':
                         run = p.add_run(child.get_text())
                         set_font(run)
@@ -156,6 +172,42 @@ def process_rich_text(doc, content, image_dir):
             doc.add_paragraph()
 
 def generate_docx(questions, output_path):
+    # 添加调试信息：打印试卷内容
+    print("=" * 50)
+    print("开始生成试卷，试卷内容如下：")
+    print("=" * 50)
+    
+    for i, question in enumerate(questions, 1):
+        print(f"\n题目 {i}:")
+        print(f"  ID: {question.get('id', '未知')}")
+        print(f"  类型: {question.get('type', '未知')}")
+        print(f"  分数: {question.get('score', '未知')}")
+        print(f"  富文本内容: {question.get('richTextContent', '无内容')[:200]}...")
+        
+        # 检查是否包含图片
+        content = question.get('richTextContent', '')
+        if '<img' in content:
+            print(f"  ⚠️ 发现图片标签")
+            # 提取图片src
+            soup = BeautifulSoup(content, 'html.parser')
+            images = soup.find_all('img')
+            for img in images:
+                src = img.get('src', '')
+                print(f"    图片源: {src}")
+        
+        # 检查是否包含公式
+        if 'data-w-e-type="formula"' in content:
+            print(f"  📐 发现数学公式")
+            soup = BeautifulSoup(content, 'html.parser')
+            formulas = soup.find_all('span', {'data-w-e-type': 'formula'})
+            for formula in formulas:
+                latex_code = formula.get('data-value', '')
+                print(f"    公式内容: {latex_code}")
+    
+    print("=" * 50)
+    print("开始处理文档生成...")
+    print("=" * 50)
+    
     doc = Document()
     type_order = ['选择题', '判断题', '填空题', '主观题']
     type_map = defaultdict(list)
@@ -163,6 +215,7 @@ def generate_docx(questions, output_path):
         type_map[q['type']].append(q)
 
     image_dir = tempfile.mkdtemp(prefix='latex_images_')
+    print(f"临时图片目录: {image_dir}")
 
     try:
         for qtype in type_order:
@@ -174,8 +227,10 @@ def generate_docx(questions, output_path):
             title = f"{qtype}（共{len(qlist)}题，合计{total}分，每题{avg:.1f}分）"
             run = doc.add_paragraph().add_run(title)
             set_font(run, is_title=True)
+            print(f"处理题目类型: {qtype}, 共 {len(qlist)} 题")
 
             for q in qlist:
+                print(f"  处理题目 ID {q.get('id', '未知')}")
                 process_rich_text(doc, q.get('richTextContent', ''), image_dir)
                 if qtype == '主观题':
                     for _ in range(3):
@@ -184,7 +239,116 @@ def generate_docx(questions, output_path):
         doc.save(output_path)
         print(f"✅ Word 试卷已生成：{output_path}")
     finally:
+        print(f"清理临时目录: {image_dir}")
         shutil.rmtree(image_dir, ignore_errors=True)
+
+def process_image_src(img_src):
+    """
+    处理图片源路径，支持多种格式
+    """
+    print(f"🖼️ 开始处理图片路径: {img_src}")
+    
+    try:
+        # 处理 file:/// 协议的路径
+        if img_src.startswith('file:///'):
+            # 移除 file:/// 前缀
+            file_path = img_src[8:]  # 去掉 'file:///'
+            # 获取项目根目录
+            if getattr(sys, 'frozen', False):  # PyInstaller 打包后
+                # 打包后，可执行文件通常在项目根目录或其子目录中
+                exe_dir = os.path.dirname(sys.executable)
+                # 检查是否在 python 子目录中，如果是则回到上级目录
+                if os.path.basename(exe_dir) == 'python':
+                    project_root = os.path.dirname(exe_dir)
+                else:
+                    project_root = exe_dir
+            else:
+                # 脚本路径: /项目根/python/matplotlibphoto.py
+                # 项目根路径: /项目根
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                project_root = os.path.dirname(script_dir)
+            
+            # 构建完整路径
+            full_path = os.path.join(project_root, file_path)
+            full_path = os.path.abspath(full_path).replace('/', os.sep)
+            
+            print(f"  可执行文件/脚本目录: {os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))}")
+            print(f"  项目根目录: {project_root}")
+            print(f"  相对路径: {file_path}")
+            print(f"  完整路径: {full_path}")
+            print(f"  文件是否存在: {os.path.exists(full_path)}")
+            return full_path
+        
+        # 处理相对路径 (如 ./src/img/xxx.png)
+        elif img_src.startswith('./src/img/'):
+            # 获取项目根目录
+            if getattr(sys, 'frozen', False):  # PyInstaller 打包后
+                exe_dir = os.path.dirname(sys.executable)
+                if os.path.basename(exe_dir) == 'python':
+                    project_root = os.path.dirname(exe_dir)
+                else:
+                    project_root = exe_dir
+            else:
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                project_root = os.path.dirname(script_dir)
+            
+            # 构建完整路径
+            relative_path = img_src[2:]  # 去掉 './'
+            full_path = os.path.join(project_root, relative_path)
+            full_path = os.path.abspath(full_path)
+            print(f"  项目根目录: {project_root}")
+            print(f"  完整路径: {full_path}")
+            print(f"  文件是否存在: {os.path.exists(full_path)}")
+            return full_path
+        
+        # 处理绝对路径
+        elif os.path.isabs(img_src):
+            print(f"  绝对路径: {img_src}")
+            print(f"  文件是否存在: {os.path.exists(img_src)}")
+            return img_src
+        
+        # 其他情况，尝试作为相对路径处理
+        else:
+            if getattr(sys, 'frozen', False):
+                exe_dir = os.path.dirname(sys.executable)
+                if os.path.basename(exe_dir) == 'python':
+                    project_root = os.path.dirname(exe_dir)
+                else:
+                    project_root = exe_dir
+            else:
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                project_root = os.path.dirname(script_dir)
+            
+            full_path = os.path.join(project_root, img_src)
+            full_path = os.path.abspath(full_path)
+            print(f"  其他情况处理 - 完整路径: {full_path}")
+            print(f"  文件是否存在: {os.path.exists(full_path)}")
+            return full_path
+            
+    except Exception as e:
+        print(f"❌ 处理图片路径失败: {e}")
+        return None
+
+def extract_image_width(style_str):
+    """
+    从样式字符串中提取图片宽度
+    """
+    try:
+        if 'width:' in style_str:
+            # 提取宽度值，如 "width: 300px"
+            width_part = [s.strip() for s in style_str.split(';') if 'width:' in s][0]
+            width_value = width_part.split(':')[1].strip()
+            
+            if width_value.endswith('px'):
+                # 将像素转换为英寸 (假设 96 DPI)
+                px_value = int(width_value[:-2])
+                inches = px_value / 96.0
+                return Inches(min(inches, 6.0))  # 限制最大宽度为6英寸
+        
+        # 默认宽度
+        return Inches(3.0)
+    except:
+        return Inches(3.0)
 
 def generate_docx_to_pdf_base64(questions: list, soffice_path: str) -> str:
     """

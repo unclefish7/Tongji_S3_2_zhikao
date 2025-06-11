@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addMergedPaperMeta: (meta) => ipcRenderer.invoke('paper:addMergedPaperMeta', meta),
     exportPaper: (paperId) => ipcRenderer.invoke('paper:exportPaper', paperId),
     importPaperFromDialog: () => ipcRenderer.invoke('paper:importPaperFromDialog'),
+    // saveImage: (sourceFilePath) => ipcRenderer.invoke('save-image', sourceFilePath),
   },
   curriculum: {
     readTotalCurriculumFile: () => ipcRenderer.invoke('readTotalCurriculumFile'),

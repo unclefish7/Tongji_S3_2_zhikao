@@ -4,7 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO, writeEncryptedFile, readEncryptedFile } from './_utils'; // Consolidated imports
+import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO, writeEncryptedFile, readEncryptedFile, saveImage } from './_utils'; // Consolidated imports
 
 export function handlePaperAPI(ipcMain) {
 
@@ -428,5 +428,15 @@ export function handlePaperAPI(ipcMain) {
             return { success: false, message: '导出失败：' + error.message };
         }
     });
-      
+
+    // 添加图片保存处理器
+    ipcMain.handle('save-image', async (event, sourceFilePath) => {
+        try {
+            const savedPath = await saveImage(sourceFilePath);
+            return savedPath;
+        } catch (error) {
+            console.error('处理图片保存请求失败:', error);
+            throw error;
+        }
+    });
 }
