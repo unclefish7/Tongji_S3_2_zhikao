@@ -1,0 +1,59 @@
+[
+  {
+    "username": "admin001",
+    "data": {
+      "type": "admin",
+      "createDate": "2025年02月15日",
+      "createTimeStamp": 1739604505241,
+      "duration": ""
+    },
+    "salt": "cffd13be70912f0874e7604106ea27b8",
+    "hashedPassword": "350419ad6e1fc29d1127f4752854d4a463cee46ba8ddec8e9d9515ef9a55e2134f4cb7238da543ff61b6f8c97fdaa44a646ddec80b7b2e157d2dc561a7ae1a2b",
+    "papers_distributed": []
+  },
+  {
+    "username": "user003",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年03月09日",
+      "createTimeStamp": 1741499575507,
+      "duration": "14"
+    },
+    "salt": "5943a4cd3aa3993d01ded1ba5d3ae16b",
+    "hashedPassword": "44485d910ee50c7f7abb8c47d79e7e5dbff7d6305260c3fa3f97df5083f42437c6262a67f0ca77d4beba8f0aa17c8541f69b84e3877c9ee2417dd4ad07202c58",
+    "papers_distributed": [
+      "053400paper1",
+      "053400paper2",
+      "paper1741781270646"
+    ]
+  },
+  {
+    "username": "user004",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年03月12日",
+      "createTimeStamp": 1741761554918,
+      "duration": "3"
+    },
+    "salt": "15f267c1a20abf88ca0061359663dbf9",
+    "hashedPassword": "274cf6b6b71d7a576c13010d8d696fc5a2697094c85ac520848a249bd26d1060a114c9492851387b4cb76f0e6b6e93c5b76ac2a9d2641295347a26fdb52fb176",
+    "papers_distributed": [
+      "053400paper1"
+    ]
+  },
+  {
+    "username": "user001",
+    "data": {
+      "type": "temp",
+      "createDate": "2025年04月26日",
+      "createTimeStamp": 1745655414338,
+      "duration": "14"
+    },
+    "salt": "6dd7383b8a701281129e847ec7c97c7b",
+    "hashedPassword": "7dfb80e991118d3297492a52bc11fd38e174cc80dbdd081edc9c5b53201d7d8e81513609f8254ee63259ff7c381da54c9e523e4cdd602461ade2abd41f3103f9",
+    "papers_distributed": [
+      "paper1745655457891",
+      "paper1745657010956"
+    ]
+  }
+]

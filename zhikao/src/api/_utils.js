@@ -3,23 +3,121 @@ const fs = require('fs').promises;
 const path = require('path');
 const { exec } = require('child_process');
 
+// 加密配置
+const ENCRYPTION_KEY = 'zhikao-system-2024-secure-key-32b'; // 32字节密钥
+const ALGORITHM = 'aes-256-cbc';
+
+// 确保密钥是32字节
+function getKey() {
+    const key = Buffer.from(ENCRYPTION_KEY, 'utf8');
+    if (key.length < 32) {
+        // 如果密钥长度不足32字节，用0填充
+        const paddedKey = Buffer.alloc(32);
+        key.copy(paddedKey);
+        return paddedKey;
+    } else if (key.length > 32) {
+        // 如果密钥长度超过32字节，截取前32字节
+        return key.slice(0, 32);
+    }
+    return key;
+}
+
+// 加密函数 - 简化版，与Python保持一致
+function encrypt(text) {
+    try {
+        // 生成随机IV（16字节）
+        const iv = crypto.randomBytes(16);
+        const key = getKey().slice(0, 16); // 使用前16字节作为密钥
+        
+        // 简单的XOR加密（与Python脚本保持一致）
+        const textBuffer = Buffer.from(text, 'utf8');
+        const encrypted = Buffer.alloc(textBuffer.length);
+        
+        for (let i = 0; i < textBuffer.length; i++) {
+            encrypted[i] = textBuffer[i] ^ key[i % key.length] ^ iv[i % iv.length];
+        }
+        
+        // 返回 IV:加密数据 的格式
+        return iv.toString('hex') + ':' + encrypted.toString('hex');
+    } catch (error) {
+        console.error('加密失败:', error);
+        throw new Error('数据加密失败');
+    }
+}
+
+// 解密函数 - 简化版，与Python保持一致
+function decrypt(encryptedData) {
+    try {
+        const parts = encryptedData.split(':');
+        if (parts.length !== 2) {
+            throw new Error('加密数据格式错误');
+        }
+        
+        const iv = Buffer.from(parts[0], 'hex');
+        const encryptedBuffer = Buffer.from(parts[1], 'hex');
+        const key = getKey().slice(0, 16); // 使用前16字节作为密钥
+        
+        // 简单的XOR解密
+        const decrypted = Buffer.alloc(encryptedBuffer.length);
+        
+        for (let i = 0; i < encryptedBuffer.length; i++) {
+            decrypted[i] = encryptedBuffer[i] ^ key[i % key.length] ^ iv[i % iv.length];
+        }
+        
+        return decrypted.toString('utf8');
+    } catch (error) {
+        console.error('解密失败:', error);
+        throw new Error('数据解密失败');
+    }
+}
+
+// 导出加密文件读写函数供其他模块使用
+export async function readEncryptedFile(filePath) {
+    try {
+        const encryptedData = await fs.readFile(filePath, 'utf8');
+        
+        // 检查是否是加密数据格式（包含冒号且不是JSON）
+        if (encryptedData.includes(':') && !encryptedData.trim().startsWith('{') && !encryptedData.trim().startsWith('[')) {
+            const decryptedData = decrypt(encryptedData);
+            return JSON.parse(decryptedData);
+        } else {
+            // 如果不是加密格式，直接当作JSON解析（向后兼容）
+            return JSON.parse(encryptedData);
+        }
+    } catch (error) {
+        console.error('读取加密文件失败:', error);
+        throw error; // 抛出错误以便调用方处理
+    }
+}
+
+export async function writeEncryptedFile(filePath, data) {
+    try {
+        const jsonString = JSON.stringify(data, null, 2);
+        const encryptedData = encrypt(jsonString);
+        await fs.writeFile(filePath, encryptedData, 'utf8');
+        return { success: true, message: 'Data saved successfully' };
+    } catch (error) {
+        console.error('写入加密文件失败:', error);
+        return { success: false, message: 'Failed to save data' };
+    }
+}
+
 export async function readUserFile() {
     try {
-        const data = await fs.readFile('../data/user/user.json', 'utf8');
-        return JSON.parse(data);
+        return await readEncryptedFile('../data/user/user.json');
     } catch (err) {
         console.error('Error reading user file:', err);
         return [];
     }
-  }
+}
 
 export async function writeUserFile(users) {
     try {
-        await fs.writeFile('../data/user/user.json', JSON.stringify(users, null, 2));
+        await writeEncryptedFile('../data/user/user.json', users);
     } catch (err) {
         console.error('Error writing user file:', err);
     }
-  }
+}
 
 export async function findUserInfo(username) {
   const users = await readUserFile();
@@ -34,43 +132,22 @@ export async function findUserInfo(username) {
 export async function readTotalCurriculumFile() {
     const filePath = '../data/exam/totalCurriculum.json';
     try {
-        const fileContent = await fs.readFile(filePath, 'utf8');
-        const existingData = JSON.parse(fileContent);
-        return existingData;
+        return await readEncryptedFile(filePath);
     } catch (err) {
         console.error('读取文件或解析 JSON 时出错:', err);
         return [];
     }
 }
 
-/**
- * 
- * @param {*} data
- * 功能：要存储的内容
- */
 export async function saveTotalCurriculumData(data) {
     try {
         const filePath = '../data/curriculum/totalCurriculum.json';
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Data saved successfully to', filePath);
-        return { success: true, message: 'Data saved successfully' };
+        return await writeEncryptedFile(filePath, data);
     } catch (error) {
         console.error('Error saving data:', error);
         return { success: false, message: 'Failed to save data' };
     }
 }
-
-/*export async function readExamFile() {
-    const filePath = '../data/exam/totalExam.json';
-    try {
-        const fileContent = await fs.readFile(filePath, 'utf8');
-        const existingData = JSON.parse(fileContent);
-        return existingData;
-    } catch (err) {
-        console.error('读取文件或解析 JSON 时出错:', err);
-        return [];
-    }
-}*/
 
 export async function readExamFile() {
     const examFilePath = path.join('..', 'data', 'exam', 'totalExam.json');
@@ -85,34 +162,23 @@ export async function readExamFile() {
           .map(name => name.replace('.json', ''))
       );
   
-      // 2. 读取 totalExam.json
-      const fileContent = await fs.readFile(examFilePath, 'utf8');
-      const allExamMeta = JSON.parse(fileContent); // 这里直接是数组
+      // 2. 读取加密的 totalExam.json
+      const allExamMeta = await readEncryptedFile(examFilePath);
   
       // 3. 过滤掉磁盘上不存在的paperId
       const filteredExamMeta = allExamMeta.filter(entry => existingPaperIds.has(entry.paperId));
   
-      // ✅ 注意：这里只返回，不写回totalExam.json
       return filteredExamMeta;
     } catch (err) {
       console.error('读取 totalExam.json 时出错:', err);
       return [];
     }
-  }
-  
+}
 
-
-/**
- * 
- * @param {*} data
- * 功能：要存储的内容
- */
 export async function saveExamData(data) {
     try {
         const filePath = '../data/exam/totalExam.json';
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Data saved successfully to', filePath);
-        return { success: true, message: 'Data saved successfully' };
+        return await writeEncryptedFile(filePath, data);
     } catch (error) {
         console.error('Error saving data:', error);
         return { success: false, message: 'Failed to save data' };
@@ -122,26 +188,17 @@ export async function saveExamData(data) {
 export async function readPaperFile(filename) {
     const filePath = '../data/paper/' + filename;
     try {
-        const fileContent = await fs.readFile(filePath, 'utf8');
-        const existingData = JSON.parse(fileContent);
-        return existingData;
+        return await readEncryptedFile(filePath);
     } catch (err) {
         console.error('读取文件或解析 JSON 时出错:', err);
         return [];
     }
 }
 
-/**
- * 
- * @param {*} data
- * 功能：要存储的内容
- */
 export async function saveRichTextData(filename, data) {
     try {
-      const filePath = '../data/paper/' + filename;
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-        console.log('Data saved successfully to', filePath);
-        return { success: true, message: 'Data saved successfully' };
+        const filePath = '../data/paper/' + filename;
+        return await writeEncryptedFile(filePath, data);
     } catch (error) {
         console.error('Error saving data:', error);
         return { success: false, message: 'Failed to save data' };
@@ -248,27 +305,28 @@ export async function compareQuestionsAI(filename) {
         sentences.push(text);
     }
 
-    // 将句子保存到 input.json 文件
+    // 将句子保存到 input.json 文件（加密存储）
     const inputData = { sentences };
-    const inputJson = JSON.stringify(inputData);
     
-
     // 构建绝对路径
     const exePath = path.resolve(__dirname, "../python/similarity_check.exe");
     const inputPath = path.resolve(__dirname, "../../data/transformer/checkinput.json"); // 输入文件路径
     const outputPath = path.resolve(__dirname, "../../data/transformer/checkoutput.json");
-    fs.writeFile(inputPath, inputJson);
+    
+    // 使用加密方式写入输入文件
+    await writeEncryptedFile(inputPath, inputData);
+    
     const workingDir = path.dirname(exePath);
 
     //调用python然后返回
     try {
         // 执行 Python 程序
-        await executeProgram(exePath, workingDir,inputPath,outputPath);
+        await executeProgram(exePath, workingDir, inputPath, outputPath);
 
         let similarityQuestions = [];
-        // 检查 output.json 文件是否存在
-        const readData = await fs.readFile(outputPath, 'utf8');
-        const similarityPairs = JSON.parse(readData);
+        
+        // 使用加密方式读取输出文件
+        const similarityPairs = await readEncryptedFile(outputPath);
 
         for (const pair of similarityPairs) {
             const questionA = questions.find(q => extractTextFromRichText(q.richTextContent) === pair.textA);
@@ -347,16 +405,16 @@ export async function createPaperDTO (paperId, username) {
         // 确保保存目录存在
         const saveDir = '../data/paperDTO';
 
-        // 保存为 paperId_username.json
+        // 保存为加密的 paperId_username.json
         const savePath = path.join(saveDir, `${paperId}_${username}.json`);
-        await fs.writeFile(savePath, JSON.stringify(paperDTO, null, 2), 'utf-8');
+        await writeEncryptedFile(savePath, paperDTO);
     
         console.log(`成功为用户 ${username} 创建试卷 DTO 文件：${savePath}`);
 
         // 更新 totalExam：新增一条新的记录
         const updatedExams = [...exams, {
             paperId: newPaperId,
-            name: `${examInfo.name}_${username}`, // 在原有的 name 后加上用户名后缀
+            name: `${examInfo.name}_${username}`,
             score: examInfo.score,
             department: examInfo.department,
             duration: examInfo.duration
@@ -366,7 +424,6 @@ export async function createPaperDTO (paperId, username) {
     } catch (error) {
         console.error('创建 PaperDTO 文件时出错:', error);
     }
-
 }
 
 export function convertParsedDocumentToWord(docx, document) {

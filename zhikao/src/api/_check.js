@@ -10,8 +10,7 @@ const { ipcMain } = require('electron');
 
 
 
-
-import { readPaperFile, convertParsedDocumentToWord, compareQuestions, compareQuestionsAI, checkQuestionIntact } from './_utils';
+import { readPaperFile, convertParsedDocumentToWord, compareQuestions, compareQuestionsAI, checkQuestionIntact, writeEncryptedFile, readEncryptedFile } from './_utils';
 
 
 

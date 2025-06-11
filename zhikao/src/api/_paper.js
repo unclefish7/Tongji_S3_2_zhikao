@@ -4,7 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO } from './_utils'; // Consolidated imports
+import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO, writeEncryptedFile, readEncryptedFile } from './_utils'; // Consolidated imports
 
 export function handlePaperAPI(ipcMain) {
 
@@ -84,14 +84,20 @@ export function handlePaperAPI(ipcMain) {
             }
 
             const filePath = result.filePaths[0];
-            const rawContent = await fs.readFile(filePath, 'utf8');
             
             let parsedContent;
             try {
-                parsedContent = JSON.parse(rawContent);
+                // 尝试读取加密文件
+                parsedContent = await readEncryptedFile(filePath);
             } catch (err) {
-                console.error('导入失败，文件内容不是合法的 JSON: ', err);
-                return { success: false, message: '导入失败：文件内容不是合法的 JSON。' };
+                // 如果加密读取失败，尝试明文读取（向后兼容）
+                try {
+                    const rawContent = await fs.readFile(filePath, 'utf8');
+                    parsedContent = JSON.parse(rawContent);
+                } catch (fallbackErr) {
+                    console.error('导入失败，文件内容无法解析: ', fallbackErr);
+                    return { success: false, message: '导入失败：文件内容无法解析，请确认文件格式正确。' };
+                }
             }
 
             // 检查导入文件格式
@@ -119,12 +125,10 @@ export function handlePaperAPI(ipcMain) {
                 counter++;
             }
 
-            // 保存试卷题目到 paper 文件夹
-            const destFileName = `${finalPaperId}.json`;
-            const destPath = path.join(process.cwd(), '../data/paper', destFileName);
-            await fs.writeFile(destPath, JSON.stringify(parsedContent.questions, null, 2), 'utf8');
+            // 保存试卷题目到 paper 文件夹（加密存储）
+            await saveRichTextData(`${finalPaperId}.json`, parsedContent.questions);
 
-            // 更新 totalExam.json，增加一条记录
+            // 更新 totalExam.json，增加一条记录（加密存储）
             totalExamData.push({
                 paperId: finalPaperId,
                 name: finalName || '未命名试卷',
@@ -133,8 +137,7 @@ export function handlePaperAPI(ipcMain) {
                 duration: duration || '未知时长'
             });
             
-            const totalExamPath = path.join(process.cwd(), '../data/exam/totalExam.json');
-            await fs.writeFile(totalExamPath, JSON.stringify(totalExamData, null, 2), 'utf8');
+            await saveExamData(totalExamData);
 
             const message = finalPaperId !== originalPaperId 
                 ? `导入成功！原试卷已存在，新试卷已重命名为：${finalName}`
@@ -149,13 +152,19 @@ export function handlePaperAPI(ipcMain) {
 
     ipcMain.handle('paper:importPaperFile', async (event, filePath, userName) => {
         try {
-            const rawContent = await fs.readFile(filePath, 'utf8');
             let parsedContent;
             try {
-                parsedContent = JSON.parse(rawContent);
+                // 尝试读取加密文件
+                parsedContent = await readEncryptedFile(filePath);
             } catch (err) {
-                console.error('导入失败，文件内容不是合法的 JSON: ', err);
-                return { success: false, message: '导入失败：文件内容不是合法的 JSON。' };
+                // 如果加密读取失败，尝试明文读取（向后兼容）
+                try {
+                    const rawContent = await fs.readFile(filePath, 'utf8');
+                    parsedContent = JSON.parse(rawContent);
+                } catch (fallbackErr) {
+                    console.error('导入失败，文件内容无法解析: ', fallbackErr);
+                    return { success: false, message: '导入失败：文件内容无法解析。' };
+                }
             }
     
             // 检查 info 和 paperId
@@ -176,7 +185,6 @@ export function handlePaperAPI(ipcMain) {
             }
     
             // 读取 totalExam.json，检查是否已有同样 paperId
-            const totalExamPath = path.join(process.cwd(), '../data/exam/totalExam.json');
             let totalExamData;
             try {
                 totalExamData = await readExamFile();
@@ -190,12 +198,10 @@ export function handlePaperAPI(ipcMain) {
                 return { success: false, message: '导入失败：该 paperId 已存在。' };
             }
     
-            // ✅ 以 paperId 命名保存文件！
-            const destFileName = `${paperId}.json`;
-            const destPath = path.join(process.cwd(), '../data/paper', destFileName);
-            await fs.writeFile(destPath, JSON.stringify(parsedContent.questions, null, 2), 'utf8');
+            // 以加密方式保存试卷题目
+            await saveRichTextData(`${paperId}.json`, parsedContent.questions);
     
-            // 更新 totalExam.json，增加一条记录
+            // 更新 totalExam.json，增加一条记录（加密存储）
             totalExamData.push({
                 paperId: paperId,
                 name: name || '未命名试卷',
@@ -203,7 +209,7 @@ export function handlePaperAPI(ipcMain) {
                 department: department || '未知部门',
                 duration: duration || '未知时长'
             });
-            await fs.writeFile(totalExamPath, JSON.stringify(totalExamData, null, 2), 'utf8');
+            await saveExamData(totalExamData);
     
             return { success: true, message: '导入成功！' };
         } catch (error) {
@@ -219,19 +225,14 @@ export function handlePaperAPI(ipcMain) {
             let existingData = await readExamFile();
             // 生成新的 id 以paper + 时间戳来命名
             const newId = `paper${Date.now()}`;
-            //console.log(curriculumId)
-            //if (existingData.length > 0) {
-            //    newId = existingData[existingData.length - 1].id + 1;
-            //}
             data.paperId = newId;
             existingData.push(data);
-            const result =  await saveExamData(existingData);
+            const result = await saveExamData(existingData);
             console.log(result)
             if (result.success){
-              //生成文件
-              const initContent = '[]';
-              const filepath = '../data/paper/' + data.paperId +'.json';
-              await fs.writeFile(filepath, initContent, 'utf8');
+              //生成空的加密文件
+              const initContent = [];
+              await saveRichTextData(data.paperId + '.json', initContent);
               return { success: true, message: 'Data saved successfully' };
             }
         } catch (error) {
@@ -290,10 +291,9 @@ export function handlePaperAPI(ipcMain) {
     });
 
     ipcMain.handle('clearPaperFile', async (event, paperId) => {
-        const paperFilePath = path.join('../data/paper/', `${paperId}.json`);
         try {
-            // 将文件内容重置为空数组
-            await fs.writeFile(paperFilePath, '[]', 'utf8');
+            // 将文件内容重置为空数组（加密存储）
+            await saveRichTextData(paperId + '.json', []);
             console.log(`Paper file ${paperId} cleared successfully`);
             return { success: true };
         } catch (error) {
@@ -360,41 +360,33 @@ export function handlePaperAPI(ipcMain) {
     });      
 
     ipcMain.handle('paper:writeAdminPaperFile', async (event, filename, data) => {
-        const folderPath = path.join(process.cwd(), '../data/paper');
-        await fs.mkdir(folderPath, { recursive: true });
-      
-        const fullPath = path.join(folderPath, filename);
-        await fs.writeFile(fullPath, JSON.stringify(data, null, 2), 'utf8');
-        return { success: true };
+        // 使用加密方式保存合并后的试卷
+        return await saveRichTextData(filename, data);
     });
 
     ipcMain.handle('paper:readTotalExamMeta', async () => {
-        const filePath = path.join(process.cwd(), '../data/exam/totalExam.json');
-        const raw = await fs.readFile(filePath, 'utf8');
-        return JSON.parse(raw);
+        // 使用加密方式读取试卷元信息
+        return await readExamFile();
     });
     
     ipcMain.handle('paper:addMergedPaperMeta', async (event, metaEntry) => {
-        const filePath = path.join(process.cwd(), '../data/exam/totalExam.json');
-        let existing = [];
         try {
-            const raw = await fs.readFile(filePath, 'utf8');
-            existing = JSON.parse(raw);
+            const existing = await readExamFile();
+            existing.push(metaEntry);
+            await saveExamData(existing);
+            return { success: true };
         } catch (e) {
-            console.error('文件不存在或内容出错:', e);
-            existing = []; // 文件不存在或内容出错时初始化为空
+            console.error('添加合并试卷元信息失败:', e);
+            return { success: false, message: 'Failed to add merged paper meta' };
         }
-        existing.push(metaEntry);
-        await fs.writeFile(filePath, JSON.stringify(existing, null, 2), 'utf8');
-        return { success: true };
     });
 
     ipcMain.handle('paper:exportPaper', async (event, paperId) => {
         try {
-            // 读取试卷题目
+            // 读取试卷题目（从加密文件）
             const questions = await readPaperFile(`${paperId}.json`);
             
-            // 读取试卷元信息
+            // 读取试卷元信息（从加密文件）
             const examMeta = await readExamFile();
             const paperInfo = examMeta.find(exam => exam.paperId === paperId);
             
@@ -422,9 +414,9 @@ export function handlePaperAPI(ipcMain) {
             const exportDir = path.join(process.cwd(), '../data/export');
             await fs.mkdir(exportDir, { recursive: true });
             
-            // 保存文件
+            // 保存文件 - 导出为加密JSON
             const exportPath = path.join(exportDir, exportFileName);
-            await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2), 'utf8');
+            await writeEncryptedFile(exportPath, exportData);
             
             return { 
                 success: true, 

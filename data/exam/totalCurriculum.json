@@ -1,16 +1,1 @@
-[
-    {
-      "id": "053400",
-      "name": "离散数学",
-      "sum": 100,
-      "department": "计算机科学与技术学院",
-      "state":"正常开课"
-    },
-    {
-        "id": "085400",
-        "name": "计算机组成原理",
-        "sum": 100,
-        "department": "计算机科学与技术学院",
-        "state":"正常开课"
-    }
-]
+0a6b38ef36b0a61dd9b0f0b80a4876cd:2b0971a42cd5ab4e80e3a6b403477edd523364b763efbb4c8cc9a4fd47456693116e34a66dffa98906786248c483d14d95aef7a67bd5ab4e80e3a6ae120866c7503261b47bd5ab4e80e3a6b90215258f046e34ea23fdb14e822b2a7c80cbd31becb9b623c63a26c8447b0a3bede5a261dfe6fc22be46294c8cc9a4fd4745668e046225e175e5ab4c466e2738dfdda141f0ebfe3a75d5ab4eddef8efd471e4edd502371a63ebba95480e1b4e5525174cd522f5ba477ffab4ccea2e9b8455f64df98adf063f9486df21a243f5981edd418fe9cb614d1fda76480e3a4fd45163190523971b567efa76480e3a4fd4501218d117125e932b1ff4c9ae3a635c9c4a353e7e5cd3eb0781a8b0d656065e983ce7d969ffe61fa7962f702e1a8d7474564dd527025e523baa95480e16270c480fc4595bfd16cf861a96480e3f9d73a

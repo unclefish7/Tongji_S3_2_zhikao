@@ -1,0 +1,37 @@
+[
+  {
+    "paperId": "053400paper1_admin001",
+    "name": "试卷导出测试",
+    "score": "20",
+    "department": "1",
+    "duration": "1"
+  },
+  {
+    "paperId": "053400paper1_admin002",
+    "name": "试卷校验测试",
+    "score": "100",
+    "department": "计算机科学与技术",
+    "duration": "1.5h"
+  },
+  {
+    "paperId": "053400paper1_merge_1744794112054",
+    "name": "试卷校验测试（合并）",
+    "score": "100",
+    "department": "计算机科学与技术",
+    "duration": "1.5h"
+  },
+  {
+    "paperId": "paper1746339074458",
+    "name": "公式生成测试",
+    "score": "1",
+    "department": "1",
+    "duration": "1"
+  },
+  {
+    "paperId": "paper1749605260765",
+    "name": "分配分数测试",
+    "score": "100",
+    "department": "1",
+    "duration": "1"
+  }
+]

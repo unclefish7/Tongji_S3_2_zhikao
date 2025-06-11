@@ -1,0 +1,77 @@
+[
+  {
+    "id": "1",
+    "type": "选择题",
+    "richTextContent": "<p>丰川祥子是何时成为卡密的</p><p>A 11 &nbsp;B 12 &nbsp; &nbsp;C 13 &nbsp;D 14</p>",
+    "score": 5,
+    "answer": "<p> 手动插入答案</p>"
+  },
+  {
+    "id": 2,
+    "type": "判断题",
+    "richTextContent": "<p>集合的交集运算满足交换律</p>",
+    "score": 5,
+    "answer": "<p>正确</p>"
+  },
+  {
+    "id": 3,
+    "type": "判断题",
+    "richTextContent": "<p>图的邻接矩阵是对称矩阵</p>",
+    "score": 12
+  },
+  {
+    "id": 4,
+    "type": "判断题",
+    "richTextContent": "<p>哈密顿回路不一定是欧拉回路</p>",
+    "score": 0
+  },
+  {
+    "id": 5,
+    "type": "判断题",
+    "richTextContent": "<p>哈密顿回路一定是欧拉回路</p>",
+    "score": 5
+  },
+  {
+    "id": 6,
+    "type": "判断题",
+    "richTextContent": "<p><br></p><p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"{e}^{2}\"></span></p>",
+    "score": 5
+  },
+  {
+    "id": 7,
+    "type": "主观题",
+    "richTextContent": "<p>1. 某班级学生参加社团活动，参加数学建模社团的学生构成集合 A 有 30 人，参加英语演讲社团的学生构成集合 B 有 25 人，两个社团都参加的有 10 人，班级总人数为 50 人。问既不参加数学建模社团也不参加英语演讲社团的学生有多少人 ？请通过集合运算知识求解。</p>",
+    "score": 5
+  },
+  {
+    "id": 8,
+    "type": "主观题",
+    "richTextContent": "<p>2. 已知命题：若今天下雨（设为命题 p），则我会在室内看书（设为命题 q）；若我在室内看书，那么我会做读书笔记（设为命题 r）。今天下雨了，请问能否推出我会做读书笔记？请用命题逻辑推理规则说明。</p>",
+    "score": 5
+  },
+  {
+    "id": 9,
+    "type": "主观题",
+    "richTextContent": "<p>3. 在一个简单无向图 G 中，有 8 个顶点。每个顶点的度数都为 3。请问该图一共有多少条边？若要使该图连通，最少需要添加几条边？依据图论的相关定理进行计算和分析。</p>",
+    "score": 10
+  },
+  {
+    "id": 10,
+    "type": "主观题",
+    "richTextContent": "<p><span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">在一个代数系统 &lt; S, </span><span style=\"color: initial; background-color: rgb(255, 255, 255); font-size: 16px;\"><em>&gt; 中，S={a, b, c}，</em></span><span style=\"color: initial; background-color: rgb(255, 255, 255); font-size: 16px;\">二元运算</span><span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">的运算表如下：</span></p><p><span style=\"color: rgba(0, 0, 0, 0.85); background-color: rgb(255, 255, 255); font-size: 16px;\">求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。</span></p><table style=\"width: auto;\"><tbody><tr><th colSpan=\"1\" rowSpan=\"1\" width=\"105\">*</th><th colSpan=\"1\" rowSpan=\"1\" width=\"106\">a</th><th colSpan=\"1\" rowSpan=\"1\" width=\"97\">b</th><th colSpan=\"1\" rowSpan=\"1\" width=\"96\">c</th></tr><tr><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">a</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">a</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">b</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">c</td></tr><tr><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">b</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">b</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">c</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">a</td></tr><tr><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">c</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">c</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">a</td><td colspan=\"1\" rowspan=\"1\" width=\"auto\" style=\"text-align: center;\">b</td></tr></tbody></table><p><br></p>",
+    "score": 12
+  },
+  {
+    "id": 11,
+    "type": "主观题",
+    "richTextContent": "<p>在一个代数系统 &lt; S, &gt; 中，S={a, b, c}，二元运算的运算表如下：</p><p> 求 (a * b) * c 和 a * (b * c) 的值，并判断该代数系统是否满足结合律 。</p>",
+    "score": 10
+  },
+  {
+    "id": 12,
+    "type": "填空题",
+    "richTextContent": "<p>分数填充_______________________</p>",
+    "score": 26,
+    "answer": "<p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"\\frac{-b\\pm\\sqrt{{b}^{2}-4ac}}{2a}\"></span></p>"
+  }
+]

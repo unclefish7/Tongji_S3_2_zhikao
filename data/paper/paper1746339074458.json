@@ -1,8 +1,1 @@
-[
-  {
-    "id": 1,
-    "type": "主观题",
-    "richTextContent": "<p>测试公式</p><p><br></p><p><span data-w-e-type=\"formula\" data-w-e-is-void data-w-e-is-inline data-value=\"\\left({x+a}\\right)^{2}=\\sum^{n}_{k=0}{\\left({^{n}_{k}}\\right){x}^{k}{a}^{n-k}}\"></span></p>",
-    "score": 1
-  }
-]
+1a19db951a0976a3a8e84c8e8af00b02:3b7b92de006c7bf0f1bb1a8283ff0312515db8de5b467bf2a5e2488ec5e7191084c90916dce4b27249b914e1c7fd19124203db9d13323ea8a5d8578593b85746424b92dc471665366410d0447238bc9e85cd3dc2541665eca1a5048995e3051d104f8e8e455a28a0b0f5188f86a9581f175cd7d30f1f2bb5ecc71a8d88af54470c10eedc5b023aa4b0b64fc682f050414d07dd971f463fb1a5fa159ccab8145b135cdb90170f35b5f1ff599f86f04f530c04d7c32744078cbdfe5e9fcfa64119010ceea2090f3cb8a5b26690d5a0046e3c02c793251d35ad8ee053d6d7a0426e3c1dd7980f4e208eaaf545b49cb6444f3c2dc0971c0e2ff9aae345b59cb64449010cec85154b30adacc71ad5dbf24a42011f8cc2541665f2fd9118cbc7fd1b41031ec09b595c7be1dbbb1896ed80
