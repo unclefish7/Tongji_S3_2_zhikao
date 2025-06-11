@@ -21,6 +21,12 @@
               @click="editUser(scope.row)"
               style="margin-left: 10px"
             >修改<i class="el-icon-document"></i></el-button>
+            <el-button
+              v-if="scope.row.username !== userName"
+              type="danger"
+              @click="confirmDeleteUser(scope.row)"
+              style="margin-left: 10px"
+            >删除<i class="el-icon-delete"></i></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -70,6 +76,7 @@
               //表格数据绑定
               tableData: [
               ],     
+              userName: '', // 添加当前用户名
             }
           },
         //该钩子函数执行时所有的DOM挂载和渲染都已完成，此时在该钩子函数中进行任何DOM操作都不 会有问题
@@ -78,6 +85,7 @@
         created() {
           this.$nextTick(() => {
             this.tableHeight = window.innerHeight - 210; //后面的50：根据需求空出的高度，自行调整
+            this.userName = sessionStorage.getItem("USERNAME"); // 获取当前登录用户名
             this.getAllData();
           });        
         },
@@ -108,7 +116,36 @@
               console.error('获取账户信息时出错:', error);
           });
        },
-  
+       confirmDeleteUser(userInfo) {
+             // 双重检查：防止删除自己
+             if (userInfo.username === this.userName) {
+               this.$message.warning('不能删除自己的账号！');
+               return;
+             }
+             
+             this.$confirm(`确定要删除用户 "${userInfo.username}" 吗？`, '删除确认', {
+               confirmButtonText: '确定',
+               cancelButtonText: '取消',
+               type: 'warning'
+             }).then(() => {
+               this.deleteUser(userInfo.username);
+             }).catch(() => {
+               this.$message.info('已取消删除');
+             });
+           },
+           async deleteUser(username) {
+             try {
+               const result = await window.electronAPI.user.deleteUser(username);
+               if (result.success) {
+                 this.$message.success('用户删除成功！');
+                 this.getAllData(); // 刷新用户列表
+               } else {
+                 this.$message.error('删除失败: ' + result.message);
+               }
+             } catch (error) {
+               this.$message.error('删除用户时出错: ' + error.message);
+             }
+           },
           }
       }
       </script>
@@ -135,4 +172,3 @@
     color: #333;
   }
       </style>
-      

@@ -153,6 +153,32 @@ export function handleUserAPI(ipcMain) {
         return newData
     });
 
-    
-      
+    ipcMain.handle('delete-user', async (event, username) => {
+        try {
+            const users = await readUserFile();
+            let userIndex = -1;
+
+            // 查找要删除的用户
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].username === username) {
+                    userIndex = i;
+                    break;
+                }
+            }
+
+            if (userIndex !== -1) {
+                // 删除用户
+                users.splice(userIndex, 1);
+                await writeUserFile(users);
+                console.log(`User ${username} deleted successfully.`);
+                return { success: true, message: 'User deleted successfully' };
+            } else {
+                console.log(`User ${username} not found.`);
+                return { success: false, message: 'User not found' };
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            return { success: false, message: error.message };
+        }
+    });
 }

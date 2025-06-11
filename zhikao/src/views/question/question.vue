@@ -4,9 +4,9 @@
     <div class="button-container">
       <el-button type="primary" size="small" @click="backPage()">返回</el-button>
       <el-button type="primary" size="small" @click="addquestion()">添加题目</el-button>
-      <el-button type="primary" size="small" @click="checkpaper()">试卷校验</el-button>
+      <el-button type="primary" size="small" @click="checkpaper()">试卷校验 & DOC生成</el-button>
       <el-button type="primary" size="small" @click="previewPaper()">试卷预览</el-button>
-      <el-button type="success" size="small" @click="exportPaper()">导出考卷</el-button>
+      <el-button type="success" size="small" @click="exportPaper()">导出考卷信息</el-button>
       <span>总分 {{this.score}}/{{this.allscore}}</span>
     </div>
     <!--表格
