@@ -7,22 +7,103 @@ import sys
 import json
 import os
 import argparse
+import secrets
 from sentence_transformers import SentenceTransformer, util
 
-# print("Python 可执行路径:", sys.executable)
+# 加密配置 - 与Node.js保持一致
+ENCRYPTION_KEY = b'zhikao-system-2024-secure-key-32b'
+
+def get_key():
+    """获取标准化的密钥"""
+    if len(ENCRYPTION_KEY) < 32:
+        return ENCRYPTION_KEY.ljust(32, b'\x00')
+    elif len(ENCRYPTION_KEY) > 32:
+        return ENCRYPTION_KEY[:32]
+    return ENCRYPTION_KEY
+
+def decrypt_data(encrypted_data):
+    """解密数据 - 与Node.js保持一致"""
+    try:
+        parts = encrypted_data.split(':')
+        if len(parts) != 2:
+            return None
+            
+        iv = bytes.fromhex(parts[0])
+        encrypted_bytes = bytes.fromhex(parts[1])
+        
+        key_bytes = get_key()[:16]
+        decrypted = bytearray()
+        
+        for i, byte in enumerate(encrypted_bytes):
+            decrypted.append(byte ^ key_bytes[i % len(key_bytes)] ^ iv[i % len(iv)])
+        
+        return decrypted.decode('utf-8')
+    except Exception as e:
+        print(f"解密失败: {e}")
+        return None
+
+def encrypt_data(data_str):
+    """加密数据 - 与Node.js保持一致"""
+    try:
+        iv = secrets.token_bytes(16)
+        key_bytes = get_key()[:16]
+        text_bytes = data_str.encode('utf-8')
+        encrypted = bytearray()
+        
+        for i, byte in enumerate(text_bytes):
+            encrypted.append(byte ^ key_bytes[i % len(key_bytes)] ^ iv[i % len(iv)])
+        
+        return iv.hex() + ':' + bytes(encrypted).hex()
+    except Exception as e:
+        print(f"加密失败: {e}")
+        return None
+
+def is_encrypted_format(content):
+    """检查内容是否是加密格式"""
+    return (':' in content and 
+            not content.strip().startswith('{') and 
+            not content.strip().startswith('['))
+
+def read_encrypted_file(file_path):
+    """读取并解密文件"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+        
+        if is_encrypted_format(content):
+            decrypted_content = decrypt_data(content)
+            if decrypted_content:
+                return json.loads(decrypted_content)
+            else:
+                raise Exception("解密失败")
+        else:
+            # 向后兼容：如果不是加密格式，直接解析JSON
+            return json.loads(content)
+    except Exception as e:
+        print(f"读取加密文件失败: {e}")
+        raise
+
+def write_encrypted_file(file_path, data):
+    """加密并写入文件"""
+    try:
+        json_str = json.dumps(data, ensure_ascii=False, indent=2)
+        encrypted_content = encrypt_data(json_str)
+        
+        if encrypted_content:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(encrypted_content)
+        else:
+            raise Exception("加密失败")
+    except Exception as e:
+        print(f"写入加密文件失败: {e}")
+        raise
+
 print("Torch 版本:", torch.__version__)
-# print("Torch 是否内置 CUDA:", torch.version.cuda)
-# print("CUDA 是否可用:", torch.cuda.is_available())
-# if torch.cuda.is_available():
-#     print("GPU 名称:", torch.cuda.get_device_name(0))
-# else:
-#     print("当前无法使用 CUDA，请检查是否为 GPU 版本 Torch，并正确安装驱动 & CUDA")
 print("CUDA 是否可用:", torch.cuda.is_available())
 if torch.cuda.is_available():
     print("GPU 名称:", torch.cuda.get_device_name(0))
 else:
     print("当前无法使用 CUDA，请检查是否为 GPU 版本 Torch，并正确安装驱动 & CUDA")
-
 
 def get_resource_path(relative_path):
     """
@@ -52,14 +133,16 @@ if not os.path.exists(input_path):
 
 # 加载本地模型
 model_path = get_resource_path("model")
-# model_path = get_resource_path("model_small")  # 小模型
-
 model = SentenceTransformer(model_path)
 
-# 读取题目内容
-with open(input_path, 'r', encoding='utf-8') as f:
-    data = json.load(f)
-sentences = data.get("sentences", [])
+# 读取加密的题目内容
+try:
+    data = read_encrypted_file(input_path)
+    sentences = data.get("sentences", [])
+    print(f"成功读取 {len(sentences)} 个句子")
+except Exception as e:
+    print(f"❌ 读取输入文件失败：{e}")
+    sys.exit(1)
 
 # 编码为向量
 embeddings = model.encode(sentences, convert_to_tensor=True)
@@ -78,8 +161,11 @@ for i in range(len(sentences)):
                 "score": round(score, 4)
             })
 
-# 写入输出文件
-with open(output_path, 'w', encoding='utf-8') as f:
-    json.dump(similarity_results, f, ensure_ascii=False, indent=2)
-
-print(f"相似度计算完成，输出结果保存在：{output_path}")
+# 写入加密的输出文件
+try:
+    write_encrypted_file(output_path, similarity_results)
+    print(f"相似度计算完成，找到 {len(similarity_results)} 对相似文本")
+    print(f"加密输出结果保存在：{output_path}")
+except Exception as e:
+    print(f"❌ 写入输出文件失败：{e}")
+    sys.exit(1)

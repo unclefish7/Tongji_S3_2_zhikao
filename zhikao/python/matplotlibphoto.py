@@ -3,6 +3,7 @@ import sys
 import os
 import shutil
 import tempfile
+import secrets
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.oxml.ns import qn
@@ -13,6 +14,63 @@ from matplotlib import rcParams
 from collections import defaultdict
 import base64
 import subprocess
+
+# 加密配置 - 与Node.js保持一致
+ENCRYPTION_KEY = b'zhikao-system-2024-secure-key-32b'
+
+def get_key():
+    """获取标准化的密钥"""
+    if len(ENCRYPTION_KEY) < 32:
+        return ENCRYPTION_KEY.ljust(32, b'\x00')
+    elif len(ENCRYPTION_KEY) > 32:
+        return ENCRYPTION_KEY[:32]
+    return ENCRYPTION_KEY
+
+def decrypt_data(encrypted_data):
+    """解密数据 - 与Node.js保持一致"""
+    try:
+        parts = encrypted_data.split(':')
+        if len(parts) != 2:
+            return None
+            
+        iv = bytes.fromhex(parts[0])
+        encrypted_bytes = bytes.fromhex(parts[1])
+        
+        key_bytes = get_key()[:16]
+        decrypted = bytearray()
+        
+        for i, byte in enumerate(encrypted_bytes):
+            decrypted.append(byte ^ key_bytes[i % len(key_bytes)] ^ iv[i % len(iv)])
+        
+        return decrypted.decode('utf-8')
+    except Exception as e:
+        print(f"解密失败: {e}")
+        return None
+
+def is_encrypted_format(content):
+    """检查内容是否是加密格式"""
+    return (':' in content and 
+            not content.strip().startswith('{') and 
+            not content.strip().startswith('['))
+
+def read_encrypted_file(file_path):
+    """读取并解密文件"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+        
+        if is_encrypted_format(content):
+            decrypted_content = decrypt_data(content)
+            if decrypted_content:
+                return json.loads(decrypted_content)
+            else:
+                raise Exception("解密失败")
+        else:
+            # 向后兼容：如果不是加密格式，直接解析JSON
+            return json.loads(content)
+    except Exception as e:
+        print(f"读取加密文件失败: {e}")
+        raise
 
 # 设置中文字体支持
 rcParams['font.sans-serif'] = ['SimHei']
@@ -131,9 +189,6 @@ def generate_docx(questions, output_path):
 def generate_docx_to_pdf_base64(questions: list, soffice_path: str) -> str:
     """
     生成 Word 文档并转换为 base64 编码的 PDF 字节串，用于前端内嵌预览。
-    - questions: 题目列表
-    - soffice_path: LibreOffice 可执行路径（soffice.exe）
-    - 返回: base64 编码字符串，可用于 src="data:application/pdf;base64,..."
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         docx_path = os.path.join(tmpdir, "temp.docx")
@@ -179,8 +234,13 @@ if __name__ == '__main__':
     input_json = sys.argv[1]
     mode_or_output = sys.argv[2]
 
-    with open(input_json, 'r', encoding='utf-8') as f:
-        questions = json.load(f)
+    # 使用加密读取功能
+    try:
+        questions = read_encrypted_file(input_json)
+        print(f"成功读取 {len(questions)} 个题目")
+    except Exception as e:
+        print(f"❌ 读取输入文件失败：{e}")
+        sys.exit(1)
 
     if mode_or_output == 'preview':
         # ✔️ 进入预览模式
