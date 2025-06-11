@@ -2,9 +2,7 @@
   <el-main>
     <el-button type="primary" size="small" @click="importPaper()">导入考卷</el-button>
     <el-button type="primary" size="small" @click="addpaper()">添加考卷</el-button>
-    <template v-if="userType === 'admin'">
-      <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
-    </template>
+    <el-button type="success" size="small" @click="confirmMerge()">合并</el-button>
 
     
     <el-form :model="userForm" size="mini" label-width="80px"></el-form>
@@ -34,21 +32,19 @@
       
       <el-table-column label="操作" width="400">
         <template v-slot="scope">
-          <template v-if="userType === 'admin'">
-            <el-popconfirm
-              class="ml-5"
-              confirm-button-text="确定"
-              cancel-button-text="我再想想"
-              icon="el-icon-info"
-              icon-color="red"
-              title="您确定删除吗？"
-              @confirm="deletePaper(scope.row.paperId)"
-            >
-              <el-button type="danger" style="margin-left: 10px" slot="reference">
-                删除 <i class="el-icon-remove-outline"></i>
-              </el-button>
-            </el-popconfirm>
-          </template>
+          <el-popconfirm
+            class="ml-5"
+            confirm-button-text="确定"
+            cancel-button-text="我再想想"
+            icon="el-icon-info"
+            icon-color="red"
+            title="您确定删除吗？"
+            @confirm="deletePaper(scope.row.paperId)"
+          >
+            <el-button type="danger" style="margin-left: 10px" slot="reference">
+              删除 <i class="el-icon-remove-outline"></i>
+            </el-button>
+          </el-popconfirm>
           
           <el-button 
             type="success" 
@@ -58,7 +54,7 @@
             修改 <i class="el-icon-document"></i>
           </el-button>
           
-          <template v-if="userType === 'admin'">
+          <el-tooltip content="选择试卷进行合并操作" placement="top">
             <el-button 
               type="info" 
               :style="{
@@ -67,9 +63,9 @@
                 borderColor: selectedToMerge.includes(scope.row.paperId) ? '#67C23A' : '#909399'
               }"
               @click="toggleSelect(scope.row.paperId)">
-              {{ selectedToMerge.includes(scope.row.paperId) ? '已选' : '待选' }}
+              {{ selectedToMerge.includes(scope.row.paperId) ? '已选中合并' : '选择合并' }}
             </el-button>
-          </template>
+          </el-tooltip>
         </template>
       </el-table-column>
     </el-table>

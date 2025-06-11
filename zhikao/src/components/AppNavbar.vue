@@ -11,58 +11,39 @@
   <body>
     <div id="app">
 
-        <p v-if="usertype === 'admin'">
+        <div v-if="usertype === 'admin'">
+          <el-submenu index="1">
+            <template slot="title">
+              <i class="el-icon-s-goods"></i>
+              <span>账户管理</span>
+            </template>
+            <el-menu-item index="1-1" @click="$router.push('/alluser')">
+              <i class="el-icon-truck"></i>账户信息
+            </el-menu-item>
+          </el-submenu>
 
-  <el-submenu index="1">
-    <template slot="title">
-      <i class="el-icon-s-goods"></i>
-      <span>账户管理</span>
-    </template>
-    <el-menu-item-group>
-      <template slot="title">
-        <i class="el-icon-truck"></i>查看账户信息
-      </template>
-      <el-menu-item index="1-1" @click="$router.push('/alluser')"><i class="el-icon-truck"></i>账户信息</el-menu-item>
-    </el-menu-item-group>
-  </el-submenu>
-
-  <el-submenu index="2">
-    <template slot="title">
-      <i class="el-icon-document"></i>
-      <span>试卷管理</span>
-    </template>
-    <el-menu-item-group>
-      <el-menu-item index="2-1" @click="$router.push('/paper')">
-        <i class="el-icon-s-finance"></i>所有试卷
-      </el-menu-item>
-    </el-menu-item-group>
-  </el-submenu>
-
-      </p>
-        
-      <p v-if="usertype === 'temp'">
-        <el-submenu index="1">
-          <template slot="title">
-            <i class="el-icon-document"></i>
-            <span>试卷管理</span>
-          </template>
-          <el-menu-item-group>
-            <el-menu-item index="1-1" @click="$router.push('/newuser')"><i class="el-icon-truck"></i>账户信息</el-menu-item>
-          </el-menu-item-group>
-        </el-submenu>
-
-        <el-submenu index="2">
-          <template slot="title">
-            <i class="el-icon-document"></i>
-            <span>试卷管理</span>
-          </template>
-          <el-menu-item-group>
+          <el-submenu index="2">
+            <template slot="title">
+              <i class="el-icon-document"></i>
+              <span>试卷管理</span>
+            </template>
             <el-menu-item index="2-1" @click="$router.push('/paper')">
               <i class="el-icon-s-finance"></i>所有试卷
-              </el-menu-item>
-          </el-menu-item-group>
-        </el-submenu>
-      </p>
+            </el-menu-item>
+          </el-submenu>
+        </div>
+        
+        <div v-if="usertype === 'temp'">
+          <el-submenu index="2">
+            <template slot="title">
+              <i class="el-icon-document"></i>
+              <span>试卷管理</span>
+            </template>
+            <el-menu-item index="2-1" @click="$router.push('/paper')">
+              <i class="el-icon-s-finance"></i>所有试卷
+            </el-menu-item>
+          </el-submenu>
+        </div>
     </div>
 
     </body>
@@ -75,7 +56,7 @@
 export default {
 data() {
 return {
-openeds: ["2", "3"],
+openeds: ["1", "2", "3"],
 judge:"",
 
 usertype: sessionStorage.getItem("TYPE"),
