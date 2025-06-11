@@ -134,6 +134,22 @@
       </el-card>
     </el-dialog>
     <el-dialog title="题目分配" :visible.sync="assignDialogVisible">
+      <el-alert
+        title="警告：分配分数将清空当前试卷内所有已有题目"
+        type="warning"
+        description="此操作会删除试卷中的所有现有题目，并根据您的设置重新生成空白题目框架。请确认您要继续此操作。"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 15px;">
+      </el-alert>
+      <el-alert
+        title="提示：如需修改分数分配"
+        type="info"
+        description="如果您想要修改分数的分配，请进入『查看考卷』页面，直接修改里面的分数，或者单独添加/删除题目。"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 20px;">
+      </el-alert>
       <el-form :model="assignForm" label-width="100px">
         <el-form-item label="选择题">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -402,6 +418,18 @@ export default {
       this.assignDialogVisible = true;
     },
     async submitAssign() {
+      // 添加二次确认
+      try {
+        await this.$confirm('此操作将删除试卷中的所有现有题目，确定要继续吗？', '二次确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
+      } catch {
+        // 用户点击取消，直接返回
+        return;
+      }
+
       const configList = [
         { type: '选择题', count: this.assignForm.choice.count, score: this.assignForm.choice.score },
         { type: '判断题', count: this.assignForm.judge.count, score: this.assignForm.judge.score },
