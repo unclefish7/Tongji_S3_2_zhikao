@@ -171,7 +171,55 @@ def process_rich_text(doc, content, image_dir):
         elif block.name == 'br':
             doc.add_paragraph()
 
-def generate_docx(questions, output_path):
+def get_exam_metadata(input_file_path):
+    """
+    根据输入文件路径获取试卷元信息
+    """
+    try:
+        # 获取输入文件名（不含扩展名）作为试卷ID
+        paper_id = os.path.splitext(os.path.basename(input_file_path))[0]
+        
+        # 构建 totalExam.json 的路径
+        # 目录结构: 项目根/zhikao/python/matplotlibphoto.py 和 项目根/data/exam/totalExam.json
+        if getattr(sys, 'frozen', False):  # PyInstaller 打包后
+            exe_dir = os.path.dirname(sys.executable)
+            if os.path.basename(exe_dir) == 'python':
+                # 从 项目根/zhikao/python 回到 项目根
+                project_root = os.path.dirname(os.path.dirname(exe_dir))
+            else:
+                # 如果exe在项目根目录
+                project_root = exe_dir
+        else:
+            # 脚本路径: 项目根/zhikao/python/matplotlibphoto.py
+            # 需要回到项目根: 项目根
+            script_dir = os.path.dirname(os.path.abspath(__file__))  # 项目根/zhikao/python
+            zhikao_dir = os.path.dirname(script_dir)  # 项目根/zhikao
+            project_root = os.path.dirname(zhikao_dir)  # 项目根
+        
+        total_exam_path = os.path.join(project_root, "data", "exam", "totalExam.json")
+        print(f"查找试卷元信息文件: {total_exam_path}")
+        
+        if not os.path.exists(total_exam_path):
+            print(f"⚠️ 试卷元信息文件不存在: {total_exam_path}")
+            return None
+        
+        # 读取并解密 totalExam.json
+        exam_list = read_encrypted_file(total_exam_path)
+        
+        # 查找匹配的试卷ID
+        for exam in exam_list:
+            if exam.get('paperId') == paper_id:
+                print(f"✅ 找到匹配的试卷元信息: {paper_id}")
+                return exam
+        
+        print(f"⚠️ 未找到匹配的试卷ID: {paper_id}")
+        return None
+        
+    except Exception as e:
+        print(f"❌ 获取试卷元信息失败: {e}")
+        return None
+
+def generate_docx(questions, output_path, input_file_path=None):
     # 添加调试信息：打印试卷内容
     print("=" * 50)
     print("开始生成试卷，试卷内容如下：")
@@ -187,7 +235,7 @@ def generate_docx(questions, output_path):
         # 检查是否包含图片
         content = question.get('richTextContent', '')
         if '<img' in content:
-            print(f"  ⚠️ 发现图片标签")
+            print("  ⚠️ 发现图片标签")
             # 提取图片src
             soup = BeautifulSoup(content, 'html.parser')
             images = soup.find_all('img')
@@ -197,7 +245,7 @@ def generate_docx(questions, output_path):
         
         # 检查是否包含公式
         if 'data-w-e-type="formula"' in content:
-            print(f"  📐 发现数学公式")
+            print("  📐 发现数学公式")
             soup = BeautifulSoup(content, 'html.parser')
             formulas = soup.find_all('span', {'data-w-e-type': 'formula'})
             for formula in formulas:
@@ -209,6 +257,31 @@ def generate_docx(questions, output_path):
     print("=" * 50)
     
     doc = Document()
+    
+    # 添加试卷元信息（如果提供了输入文件路径）
+    if input_file_path:
+        exam_metadata = get_exam_metadata(input_file_path)
+        if exam_metadata:
+            # 试卷标题
+            title_para = doc.add_paragraph()
+            title_run = title_para.add_run(exam_metadata.get('name', '试卷'))
+            set_font(title_run, is_title=True)
+            title_run.font.size = Pt(20)
+            title_para.alignment = 1  # 居中对齐
+            
+            # 试卷信息
+            info_para = doc.add_paragraph()
+            info_text = f"总分：{exam_metadata.get('score', '未知')}分    " \
+                       f"部门：{exam_metadata.get('department', '未知')}    " \
+                       f"考试时长：{exam_metadata.get('duration', '未知')}"
+            info_run = info_para.add_run(info_text)
+            set_font(info_run)
+            info_para.alignment = 1  # 居中对齐
+            
+            # 添加分隔线
+            doc.add_paragraph("=" * 60).alignment = 1
+            doc.add_paragraph()
+    
     type_order = ['选择题', '判断题', '填空题', '主观题']
     type_map = defaultdict(list)
     for q in questions:
@@ -358,7 +431,7 @@ def generate_docx_to_pdf_base64(questions: list, soffice_path: str) -> str:
         docx_path = os.path.join(tmpdir, "temp.docx")
         pdf_path = os.path.join(tmpdir, "temp.pdf")
 
-        # ✅ 生成 Word 文档
+        # ✅ 生成 Word 文档（预览模式不传入文件路径，不显示元信息）
         generate_docx(questions, docx_path)
 
         # ✅ 使用 LibreOffice 转换成 PDF
@@ -423,9 +496,9 @@ if __name__ == '__main__':
         else:
             print("data:application/pdf;base64," + base64_pdf)
     else:
-        # ✔️ 正常导出 Word
+        # ✔️ 正常导出 Word（传入输入文件路径以获取元信息）
         output_docx = mode_or_output
-        generate_docx(questions, output_docx)
+        generate_docx(questions, output_docx, input_json)
 
 
 
