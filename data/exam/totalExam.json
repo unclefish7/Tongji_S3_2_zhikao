@@ -26,5 +26,12 @@
     "score": "1",
     "department": "1",
     "duration": "1"
+  },
+  {
+    "paperId": "paper1749605260765",
+    "name": "分配分数测试",
+    "score": "100",
+    "department": "1",
+    "duration": "1"
   }
 ]

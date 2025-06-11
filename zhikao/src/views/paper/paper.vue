@@ -136,20 +136,36 @@
     <el-dialog title="题目分配" :visible.sync="assignDialogVisible">
       <el-form :model="assignForm" label-width="100px">
         <el-form-item label="选择题">
-          <el-input-number v-model="assignForm.choice.count" :min="0" placeholder="题数"></el-input-number>
-          <el-input-number v-model="assignForm.choice.score" :min="0" placeholder="分数"></el-input-number>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <el-input-number v-model="assignForm.choice.count" :min="0" placeholder="题数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">题，</span>
+            <el-input-number v-model="assignForm.choice.score" :min="0" placeholder="分数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">每题{{ assignForm.choice.score }}分</span>
+          </div>
         </el-form-item>
         <el-form-item label="判断题">
-          <el-input-number v-model="assignForm.judge.count" :min="0" placeholder="题数"></el-input-number>
-          <el-input-number v-model="assignForm.judge.score" :min="0" placeholder="分数"></el-input-number>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <el-input-number v-model="assignForm.judge.count" :min="0" placeholder="题数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">题，</span>
+            <el-input-number v-model="assignForm.judge.score" :min="0" placeholder="分数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">每题{{ assignForm.judge.score }}分</span>
+          </div>
         </el-form-item>
         <el-form-item label="填空题">
-          <el-input-number v-model="assignForm.blank.count" :min="0" placeholder="题数"></el-input-number>
-          <el-input-number v-model="assignForm.blank.score" :min="0" placeholder="分数"></el-input-number>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <el-input-number v-model="assignForm.blank.count" :min="0" placeholder="题数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">题，</span>
+            <el-input-number v-model="assignForm.blank.score" :min="0" placeholder="分数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">每题{{ assignForm.blank.score }}分</span>
+          </div>
         </el-form-item>
         <el-form-item label="主观题">
-          <el-input-number v-model="assignForm.subjective.count" :min="0" placeholder="题数"></el-input-number>
-          <el-input-number v-model="assignForm.subjective.score" :min="0" placeholder="分数"></el-input-number>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <el-input-number v-model="assignForm.subjective.count" :min="0" placeholder="题数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">题，</span>
+            <el-input-number v-model="assignForm.subjective.score" :min="0" placeholder="分数"></el-input-number>
+            <span style="color: #606266; font-size: 14px;">每题{{ assignForm.subjective.score }}分</span>
+          </div>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
