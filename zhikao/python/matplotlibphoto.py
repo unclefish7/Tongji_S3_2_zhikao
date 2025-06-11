@@ -14,6 +14,8 @@ from matplotlib import rcParams
 from collections import defaultdict
 import base64
 import subprocess
+from PIL import Image
+import fitz  # PyMuPDF
 
 # 加密配置 - 与Node.js保持一致
 ENCRYPTION_KEY = b'zhikao-system-2024-secure-key-32b'
@@ -457,7 +459,7 @@ def extract_image_width(style_str):
 
 def generate_docx_to_pdf_base64(questions: list, soffice_path: str) -> str:
     """
-    生成 Word 文档并转换为 base64 编码的 PDF 字节串，用于前端内嵌预览。
+    生成 Word 文档，转换为 PDF，再转换为图片，返回图片的 base64 编码。
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         docx_path = os.path.join(tmpdir, "temp.docx")
@@ -477,12 +479,54 @@ def generate_docx_to_pdf_base64(questions: list, soffice_path: str) -> str:
             print(f"❌ LibreOffice 转换失败: {result.stderr.decode()}")
             sys.exit(1)
 
-        # ✅ 读取 PDF 内容并转 base64
-        with open(pdf_path, "rb") as f:
-            pdf_bytes = f.read()
+        # ✅ 将 PDF 转换为图片并返回 base64 编码
+        return convert_pdf_to_images_base64(pdf_path)
 
-        return base64.b64encode(pdf_bytes).decode('utf-8')
-    
+def convert_pdf_to_images_base64(pdf_path: str) -> str:
+    """
+    将PDF转换为图片，返回所有页面图片的base64编码（JSON格式）
+    """
+    try:
+        # 打开PDF文档
+        pdf_document = fitz.open(pdf_path)
+        images_base64 = []
+        
+        print(f"PDF总页数: {len(pdf_document)}")
+        
+        for page_num in range(len(pdf_document)):
+            # 获取页面
+            page = pdf_document.load_page(page_num)
+            
+            # 设置渲染参数，提高清晰度
+            zoom = 2  # 缩放倍数，提高图片质量
+            mat = fitz.Matrix(zoom, zoom)
+            
+            # 渲染页面为图片
+            pix = page.get_pixmap(matrix=mat)
+            
+            # 转换为PIL Image
+            img_data = pix.tobytes("png")
+            
+            # 转换为base64
+            img_base64 = base64.b64encode(img_data).decode('utf-8')
+            images_base64.append({
+                'page': page_num + 1,
+                'data': img_base64
+            })
+            
+            print(f"✅ 第 {page_num + 1} 页转换完成")
+        
+        pdf_document.close()
+        
+        # 返回JSON格式的图片数据
+        import json
+        return json.dumps(images_base64, ensure_ascii=False)
+        
+    except Exception as e:
+        print(f"❌ PDF转图片失败: {e}")
+        # 如果转换失败，返回空的JSON数组
+        return "[]"
+
 def get_soffice_path():
     if getattr(sys, 'frozen', False):  # PyInstaller 打包后运行
         base_dir = os.path.dirname(sys.executable)
@@ -519,14 +563,15 @@ if __name__ == '__main__':
             print(f"❌ LibreOffice 可执行文件未找到: {soffice_path}")
             sys.exit(1)
 
-        base64_pdf = generate_docx_to_pdf_base64(questions, soffice_path)
+        # 修改：现在返回的是图片的base64数据（JSON格式）
+        images_base64_json = generate_docx_to_pdf_base64(questions, soffice_path)
 
         if base64_output_path:
             with open(base64_output_path, "w", encoding="utf-8") as f:
-                f.write(base64_pdf)
-            print(f"✅ PDF 预览 base64 已写入: {base64_output_path}")
+                f.write(images_base64_json)
+            print(f"✅ 图片预览 base64 已写入: {base64_output_path}")
         else:
-            print("data:application/pdf;base64," + base64_pdf)
+            print(images_base64_json)
     else:
         # ✔️ 正常导出 Word（传入输入文件路径以获取元信息）
         output_docx = mode_or_output

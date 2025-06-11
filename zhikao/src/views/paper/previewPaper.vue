@@ -21,21 +21,11 @@
       :closable="false">
     </el-alert>
 
-    <!-- PDF预览 -->
-    <div v-if="!isLoading && !hasError" class="pdf-container">
-      <!-- 使用object标签替代iframe，提供更好的限制选项 -->
-      <object 
-        v-if="pdfSrc" 
-        :data="pdfSrc" 
-        type="application/pdf" 
-        class="pdf-frame"
-        ref="pdfObject">
-        <div class="pdf-fallback">
-          无法显示PDF，请检查您的浏览器是否支持PDF预览。
-        </div>
-      </object>
-      <!-- 添加透明覆盖层防止交互 -->
-      <div class="interaction-blocker"></div>
+    <!-- 图片预览 -->
+    <div v-if="!isLoading && !hasError" class="image-container">
+      <div v-for="(imageUrl, index) in imageUrls" :key="index" class="image-wrapper">
+        <img :src="imageUrl" class="preview-image" />
+      </div>
     </div>
   </div>
 </template>
@@ -47,13 +37,12 @@ export default {
       paperId: 0,
       isLoading: true,
       hasError: false,
-      pdfBase64: null,
-      pdfSrc: null
+      imageUrls: []
     }
   },
   created() {
     this.paperId = this.$route.query.paperId
-    this.generatePdfPreview()
+    this.generateImagePreview()
     // 禁用页面滚动
     document.body.style.overflow = 'hidden'
   },
@@ -61,34 +50,47 @@ export default {
     backPage() {
       this.$router.back()
     },
-    async generatePdfPreview() {
+    
+    async generateImagePreview() {
       this.isLoading = true
       this.hasError = false
-      this.pdfSrc = null
+      this.imageUrls = []
       
       try {
         // 构造JSON文件路径
         const jsonPath = `../data/paper/${this.paperId}.json`
         
-        // 调用API获取PDF的base64编码
-        const base64Data = await window.electronAPI.check.generatePreviewPDF(jsonPath)
+        // 调用API获取图片的base64编码（JSON格式）
+        const imagesData = await window.electronAPI.check.generatePreviewPDF(jsonPath)
         
-        if (!base64Data) {
+        if (!imagesData) {
           this.hasError = true
           this.isLoading = false
           return
         }
         
-        // 生成Data URL
-        this.pdfSrc = `data:application/pdf;base64,${base64Data}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&print=0&download=0`
+        // 解析返回的JSON数据
+        let imagesList = []
+        try {
+          imagesList = JSON.parse(imagesData)
+        } catch (e) {
+          console.error('解析图片数据失败:', e)
+          this.hasError = true
+          this.isLoading = false
+          return
+        }
+        
+        // 转换为图片URL数组
+        this.imageUrls = imagesList.map(item => `data:image/png;base64,${item.data}`)
+        
         this.isLoading = false
         
-        // 在PDF加载完成后，添加额外防止打印和右键菜单的措施
+        // 添加防护措施
         this.$nextTick(() => {
           this.disablePrintAndDownload()
         })
       } catch (error) {
-        console.error('生成PDF预览失败:', error)
+        console.error('生成图片预览失败:', error)
         this.hasError = true
         this.isLoading = false
       }
@@ -168,38 +170,25 @@ export default {
   flex: 1;
 }
 
-.pdf-container {
+.image-container {
   position: relative;
   flex: 1;
   width: 100%;
   height: calc(100% - 50px); /* 减去按钮区域高度 */
-  overflow: hidden;
+  overflow: auto; /* 允许滚动 */
+  padding: 10px; /* 添加内边距 */
+  box-sizing: border-box; /* 包括内边距和边框在内的总高度计算 */
 }
 
-.pdf-frame {
-  width: 100%;
-  height: 100%;
-  border: none;
+.image-wrapper {
+  margin-bottom: 10px; /* 图片之间的间距 */
 }
 
-.pdf-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  text-align: center;
-  color: #909399;
-}
-
-/* 透明覆盖层，防止不必要的交互 */
-.interaction-blocker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  pointer-events: none;
+.preview-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto; /* 图片居中 */
 }
 
 /* 禁用文本选择 */
