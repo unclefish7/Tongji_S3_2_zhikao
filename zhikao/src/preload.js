@@ -67,6 +67,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   //saveImage: (imageData) => ipcMain.invoke('saveImage', imageData)
   saveImage: (imageData) => ipcRenderer.invoke('save-image', imageData),
+  deleteImage: (filePath) => ipcRenderer.invoke('delete-image', filePath),
+  deleteMultipleImages: (filePaths) => ipcRenderer.invoke('delete-multiple-images', filePaths),
+  cleanupOldImages: (daysOld) => ipcRenderer.invoke('cleanup-old-images', daysOld),
 
 });
 

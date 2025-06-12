@@ -62,9 +62,26 @@ export default {
     const type = ref('')
     const paperId = ref('')
     const questionId = ref(0)
+    // 添加图片跟踪
+    const uploadedImages = ref(new Set()) // 跟踪本次编辑中上传的图片
+    const originalImages = ref(new Set()) // 跟踪原始内容中的图片
     const { proxy } = getCurrentInstance()  // 获取 options API 中的 this
     const isRegistered = globalState.isRegistered  // 直接引用，全局响应式绑定
     console.log('是否注册:', isRegistered.value) // 读取值
+
+    // 提取HTML中的图片URL
+    const extractImageUrls = (html) => {
+      const imgRegex = /<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi
+      const urls = new Set()
+      let match
+      while ((match = imgRegex.exec(html)) !== null) {
+        const url = match[1]
+        if (url.startsWith('file:///')) {
+          urls.add(url)
+        }
+      }
+      return urls
+    }
 
     // 模拟 ajax 异步获取内容
     onMounted(() => {
@@ -88,6 +105,9 @@ export default {
               type.value = current.type || ''
               content.value = current.richTextContent || '<p></p>'
               valueHtml.value = current.answer || '<p></p>'
+              // 提取原始答案中的图片
+              originalImages.value = extractImageUrls(valueHtml.value)
+              console.log("原始答案图片:", originalImages.value)
               console.log("type.value:", type.value)
               proxy.type = type.value
               proxy.originalData = {
@@ -156,6 +176,10 @@ export default {
           const href = url;
           
           console.log('插入图片 URL:', url);
+          
+          // 记录上传的图片
+          uploadedImages.value.add(url);
+          console.log('已上传图片:', uploadedImages.value);
           
           // 插入图片到编辑器
           insertFn(url, alt, href);
@@ -229,6 +253,9 @@ export default {
       type,
       paperId,
       questionId,
+      uploadedImages,
+      originalImages,
+      extractImageUrls,
       mode: 'default', // 或 'simple'
       toolbarConfig,
       editorConfig,
@@ -281,17 +308,67 @@ export default {
       if (editor == null) return;
       console.log(editor.getHtml()); // 执行 editor API
     },
+    async cleanupUnusedImages(finalContent) {
+      try {
+        // 提取最终内容中使用的图片
+        const finalImages = this.extractImageUrls(finalContent);
+        
+        // 找出需要删除的图片：本次上传但最终未使用的图片
+        const imagesToDelete = new Set();
+        
+        // 检查本次上传的图片中哪些未在最终内容中使用
+        this.uploadedImages.forEach(img => {
+          if (!finalImages.has(img)) {
+            imagesToDelete.add(img);
+          }
+        });
+        
+        // 检查原始图片中哪些在最终内容中被删除了
+        this.originalImages.forEach(img => {
+          if (!finalImages.has(img)) {
+            imagesToDelete.add(img);
+          }
+        });
+        
+        console.log('需要删除的图片:', imagesToDelete);
+        
+        // 删除未使用的图片
+        if (imagesToDelete.size > 0) {
+          for (const imageUrl of imagesToDelete) {
+            try {
+              // 从 file:/// URL 中提取文件路径
+              const filePath = imageUrl.replace(/^file:\/\/\//, '').replace(/\//g, '\\');
+              await window.electronAPI.deleteImage(filePath);
+              console.log('删除图片成功:', filePath);
+            } catch (error) {
+              console.warn('删除图片失败:', imageUrl, error);
+            }
+          }
+          
+          console.log(`已清理 ${imagesToDelete.size} 个未使用的图片`);
+        }
+      } catch (error) {
+        console.error('清理图片时出错:', error);
+      }
+    },
     resetForm() {
       // 将分数、题目类型、富文本内容都重置为 originalData
       this.type = this.originalData.type
       this.valueHtml = this.originalData.answer
+      
+      // 清理本次编辑中上传但未保存的图片
+      this.cleanupUnusedImages(this.originalData.answer);
+      
+      // 重置图片跟踪
+      this.uploadedImages.clear();
+      
       this.$message({
         message: '已恢复初始内容',
         type: 'info',
         showClose: true,
       });
     },
-    saveEditorContent() {
+    async saveEditorContent() {
         // 获取编辑器内容（使用你已注册的 this.editor 或 this.editorRef）
         const editor = this.editor || this.editorRef;
         const richText = editor?.getHtml?.() || this.valueHtml;
@@ -299,6 +376,9 @@ export default {
         const answerToSave = (!richText || richText === '<p>加载中...</p>')
             ? this.originalData.answer
             : richText;
+
+        // 保存前先清理未使用的图片
+        await this.cleanupUnusedImages(answerToSave);
 
         const updatedData = {
             answer: answerToSave
@@ -320,8 +400,6 @@ export default {
 
         this.$router.back();
     }
-
-    
   }
 }
 </script>

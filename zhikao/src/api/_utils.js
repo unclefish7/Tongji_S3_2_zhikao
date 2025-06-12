@@ -568,3 +568,127 @@ export async function saveImage(sourceFilePath) {
         throw new Error(`图片保存失败: ${error.message}`);
     }
 }
+
+/**
+ * 删除指定的图片文件
+ * @param {string} filePath 要删除的文件路径（可以是相对路径或绝对路径）
+ * @returns {Promise<boolean>} 返回删除结果
+ */
+export async function deleteImage(filePath) {
+    try {
+        console.log("开始删除图片:", filePath);
+        
+        let actualPath = filePath;
+        
+        // 如果是相对路径，转换为绝对路径
+        if (!path.isAbsolute(filePath)) {
+            // 处理 ./src/img/ 开头的相对路径
+            if (filePath.startsWith('./src/img/')) {
+                actualPath = path.resolve(filePath);
+            } else if (filePath.startsWith('src/img/')) {
+                actualPath = path.resolve('./', filePath);
+            } else {
+                // 默认在 ./src/img 目录下查找
+                actualPath = path.resolve('./src/img', path.basename(filePath));
+            }
+        }
+        
+        console.log("实际删除路径:", actualPath);
+        
+        // 检查文件是否存在
+        try {
+            await fs.access(actualPath);
+        } catch (error) {
+            console.warn("文件不存在或无法访问:", actualPath);
+            return true; // 文件不存在视为删除成功
+        }
+        
+        // 安全检查：确保只删除 img 目录下的文件
+        const imgDir = path.resolve('./src/img');
+        if (!actualPath.startsWith(imgDir)) {
+            throw new Error('出于安全考虑，只能删除 img 目录下的文件');
+        }
+        
+        // 删除文件
+        await fs.unlink(actualPath);
+        console.log("图片删除成功:", actualPath);
+        
+        return true;
+    } catch (error) {
+        console.error('删除图片失败:', error);
+        throw new Error(`图片删除失败: ${error.message}`);
+    }
+}
+
+/**
+ * 批量删除图片文件
+ * @param {Array<string>} filePaths 要删除的文件路径数组
+ * @returns {Promise<{success: number, failed: number, errors: Array}>} 返回删除结果统计
+ */
+export async function deleteMultipleImages(filePaths) {
+    const results = {
+        success: 0,
+        failed: 0,
+        errors: []
+    };
+    
+    for (const filePath of filePaths) {
+        try {
+            await deleteImage(filePath);
+            results.success++;
+        } catch (error) {
+            results.failed++;
+            results.errors.push({
+                filePath,
+                error: error.message
+            });
+        }
+    }
+    
+    console.log(`批量删除完成: 成功 ${results.success} 个，失败 ${results.failed} 个`);
+    return results;
+}
+
+/**
+ * 清理指定目录下的过期图片文件（超过指定天数的文件）
+ * @param {number} daysOld 文件存在天数阈值，默认30天
+ * @returns {Promise<{deletedCount: number, errors: Array}>} 返回清理结果
+ */
+export async function cleanupOldImages(daysOld = 30) {
+    try {
+        const imgDir = path.resolve('./src/img');
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        
+        const files = await fs.readdir(imgDir);
+        const results = {
+            deletedCount: 0,
+            errors: []
+        };
+        
+        for (const file of files) {
+            try {
+                const filePath = path.join(imgDir, file);
+                const stats = await fs.stat(filePath);
+                
+                // 如果文件创建时间早于截止日期，则删除
+                if (stats.birthtime < cutoffDate) {
+                    await fs.unlink(filePath);
+                    results.deletedCount++;
+                    console.log(`清理过期图片: ${file}`);
+                }
+            } catch (error) {
+                results.errors.push({
+                    file,
+                    error: error.message
+                });
+            }
+        }
+        
+        console.log(`清理完成: 删除了 ${results.deletedCount} 个过期图片`);
+        return results;
+    } catch (error) {
+        console.error('清理过期图片失败:', error);
+        throw new Error(`清理过期图片失败: ${error.message}`);
+    }
+}

@@ -4,7 +4,7 @@ const path = require('path');
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO, writeEncryptedFile, readEncryptedFile, saveImage } from './_utils'; // Consolidated imports
+import { readPaperFile, saveRichTextData, readExamFile, saveExamData, readUserFile, writeUserFile, createPaperDTO, writeEncryptedFile, readEncryptedFile, saveImage, deleteImage, deleteMultipleImages, cleanupOldImages } from './_utils'; // Consolidated imports
 
 export function handlePaperAPI(ipcMain) {
 
@@ -436,6 +436,39 @@ export function handlePaperAPI(ipcMain) {
             return savedPath;
         } catch (error) {
             console.error('处理图片保存请求失败:', error);
+            throw error;
+        }
+    });
+
+    // 添加图片删除处理器
+    ipcMain.handle('delete-image', async (event, filePath) => {
+        try {
+            const result = await deleteImage(filePath);
+            return result;
+        } catch (error) {
+            console.error('处理图片删除请求失败:', error);
+            throw error;
+        }
+    });
+
+    // 添加批量图片删除处理器
+    ipcMain.handle('delete-multiple-images', async (event, filePaths) => {
+        try {
+            const results = await deleteMultipleImages(filePaths);
+            return results;
+        } catch (error) {
+            console.error('处理批量图片删除请求失败:', error);
+            throw error;
+        }
+    });
+
+    // 添加清理过期图片处理器
+    ipcMain.handle('cleanup-old-images', async (event, daysOld = 30) => {
+        try {
+            const results = await cleanupOldImages(daysOld);
+            return results;
+        } catch (error) {
+            console.error('处理清理过期图片请求失败:', error);
             throw error;
         }
     });
