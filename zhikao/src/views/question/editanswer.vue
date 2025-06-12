@@ -47,10 +47,9 @@ import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import kityformula from "@/components/kityformula";
 import { Boot } from '@wangeditor/editor'
 import formulaModule from '@wangeditor/plugin-formula'
-import { onBeforeUnmount, ref, shallowRef, onMounted} from 'vue'
+import { onBeforeUnmount, ref, shallowRef, onMounted, getCurrentInstance } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import globalState from '@/globalState'
-import { getCurrentInstance } from 'vue'
 
 export default {
   components: { Editor, Toolbar },
@@ -119,17 +118,54 @@ export default {
     }
 
     editorConfig.MENU_CONF['uploadImage'] = {
-      server: '/api/upload',
+      // 移除 server 配置，因为使用自定义上传
+      // server: '/api/upload',
+      
+      // 最大文件体积限制，默认为 2M
+      maxFileSize: 5 * 1024 * 1024, // 5M
+      
+      // 限制图片类型
+      allowedFileTypes: ['image/*'],
 
       async customUpload(file, insertFn) {      
-        // 获取文件地址
-        const filePath = file.path.replace(/\\/g, '/');
-        console.log(filePath)
-        const result = await window.electronAPI.saveImage(filePath);
-        const url = `file:///${result}`;
-        const alt = file.name;
-        const href = url;
-        insertFn(url, alt, href);
+        try {
+          console.log('开始上传图片:', file.name);
+          
+          // 检查文件是否存在 path 属性（Electron 环境）
+          if (!file.path) {
+            console.error('文件缺少 path 属性');
+            proxy.$message.error('图片上传失败：文件路径获取失败');
+            return;
+          }
+          
+          // 获取文件地址并处理路径
+          const filePath = file.path.replace(/\\/g, '/');
+          console.log('文件路径:', filePath);
+          
+          // 修改：使用正确的API路径
+          const result = await window.electronAPI.saveImage(filePath);
+          console.log('保存结果:', result);
+          
+          if (!result) {
+            throw new Error('保存图片失败');
+          }
+          
+          // 构造图片 URL
+          const url = `file:///${result.replace(/\\/g, '/')}`;
+          const alt = file.name;
+          const href = url;
+          
+          console.log('插入图片 URL:', url);
+          
+          // 插入图片到编辑器
+          insertFn(url, alt, href);
+          
+          proxy.$message.success('图片上传成功');
+          
+        } catch (error) {
+          console.error('图片上传失败:', error);
+          proxy.$message.error(`图片上传失败: ${error.message}`);
+        }
       },
     }
 

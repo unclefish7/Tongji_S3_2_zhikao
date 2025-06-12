@@ -235,10 +235,13 @@ def get_exam_metadata(input_file_path):
         print(f"❌ 获取试卷元信息失败: {e}")
         return None
 
-def generate_docx(questions, output_path, input_file_path=None):
+def generate_docx(questions, output_path, input_file_path=None, mode='normal'):
     # 添加调试信息：打印试卷内容
     print("=" * 50)
-    print("开始生成试卷，试卷内容如下：")
+    if mode == 'answer':
+        print("开始生成答案，试卷内容如下：")
+    else:
+        print("开始生成试卷，试卷内容如下：")
     print("=" * 50)
     
     for i, question in enumerate(questions, 1):
@@ -280,7 +283,10 @@ def generate_docx(questions, output_path, input_file_path=None):
         if exam_metadata:
             # 试卷标题
             title_para = doc.add_paragraph()
-            title_run = title_para.add_run(exam_metadata.get('name', '试卷'))
+            title_text = exam_metadata.get('name', '试卷')
+            if mode == 'answer':
+                title_text += " - 答案"
+            title_run = title_para.add_run(title_text)
             set_font(title_run, is_title=True)
             title_run.font.size = Pt(20)
             title_para.alignment = 1  # 居中对齐
@@ -336,15 +342,44 @@ def generate_docx(questions, output_path, input_file_path=None):
                 # 处理题目内容，传入题目序号
                 process_rich_text(doc, q.get('richTextContent', ''), image_dir, question_number)
                 
+                # 如果是答案模式，添加答案部分
+                if mode == 'answer':
+                    answer_content = q.get('answer', '')
+                    if answer_content and answer_content.strip() and answer_content != '<p></p>':
+                        # 添加答案标题
+                        answer_title_para = doc.add_paragraph()
+                        answer_title_run = answer_title_para.add_run("答案：")
+                        set_font(answer_title_run)
+                        answer_title_run.bold = True
+                        answer_title_run.font.color.rgb = None  # 使用默认颜色
+                        
+                        # 添加答案内容
+                        process_rich_text(doc, answer_content, image_dir)
+                        
+                        # 添加答案分隔线
+                        separator_para = doc.add_paragraph()
+                        separator_run = separator_para.add_run("─" * 50)
+                        set_font(separator_run)
+                        separator_run.font.size = Pt(8)
+                    else:
+                        # 如果没有答案，添加提示
+                        no_answer_para = doc.add_paragraph()
+                        no_answer_run = no_answer_para.add_run("答案：（未提供答案）")
+                        set_font(no_answer_run)
+                        no_answer_run.italic = True
+                
                 # 为主观题添加额外空行
-                if qtype == '主观题':
+                if qtype == '主观题' and mode != 'answer':
                     for _ in range(3):
                         doc.add_paragraph()
                 
                 question_number += 1
 
         doc.save(output_path)
-        print(f"✅ Word 试卷已生成：{output_path}")
+        if mode == 'answer':
+            print(f"✅ Word 答案已生成：{output_path}")
+        else:
+            print(f"✅ Word 试卷已生成：{output_path}")
     finally:
         print(f"清理临时目录: {image_dir}")
         shutil.rmtree(image_dir, ignore_errors=True)
@@ -541,6 +576,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         print("用法：")
         print("  👉 生成 Word：python export_exam.py questions.json output.docx")
+        print("  👉 生成答案：python export_exam.py questions.json answer output.docx")
         print("  👉 生成预览：python export_exam.py questions.json preview [base64_output.txt]")
         sys.exit(1)
 
@@ -572,6 +608,13 @@ if __name__ == '__main__':
             print(f"✅ 图片预览 base64 已写入: {base64_output_path}")
         else:
             print(images_base64_json)
+    elif mode_or_output == 'answer':
+        # ✔️ 进入答案生成模式
+        if len(sys.argv) < 4:
+            print("❌ 答案模式需要指定输出文件")
+            sys.exit(1)
+        output_docx = sys.argv[3]
+        generate_docx(questions, output_docx, input_json, mode='answer')
     else:
         # ✔️ 正常导出 Word（传入输入文件路径以获取元信息）
         output_docx = mode_or_output

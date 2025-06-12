@@ -60,6 +60,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   check: {
     generateExamPaper: (filename) => ipcRenderer.invoke('generate-exam-paper', filename),
     generateAnswerSheet: (filename) => ipcRenderer.invoke('generate-answer-sheet', filename),
+    generateAnswer: (filename) => ipcRenderer.invoke('generate-answer', filename),
     checkQuestions: (filename) => ipcRenderer.invoke('check-questions', filename),
     checkQuestionsAI: (filename) => ipcRenderer.invoke('check-questions-AI', filename),
     generatePreviewPDF: (jsonPath) => ipcRenderer.invoke('generate-preview-pdf', jsonPath),

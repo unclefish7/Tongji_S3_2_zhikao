@@ -73,6 +73,34 @@ export function handleCheckAPI(ipcMain) {
             console.error('执行生成答题卡命令时出错:', e);
         }
     });
+
+    ipcMain.handle('generate-answer', async (event, filename) => {
+        try {
+            console.log('准备生成答案：', filename);
+
+            const exePath = path.resolve('./python', 'matplotlibphoto.exe');
+            const filepath = path.resolve('../data/paper', filename);
+            const answerDocxName = filename.replace('.json', '') + '_answer.docx';
+            const outputDocxPath = path.resolve('../data', answerDocxName);
+
+            console.log('EXE path:', exePath);
+            console.log('Input JSON path:', filepath);
+            console.log('Output DOCX path:', outputDocxPath);
+
+            exec(`"${exePath}" "${filepath}" answer "${outputDocxPath}"`, (err, stdout, stderr) => {
+                if (err) {
+                    console.error('答案生成失败:', err);
+                    return;
+                }
+                console.log('答案生成完成');
+                console.log('stdout:', stdout);
+                console.error('stderr:', stderr);
+            });
+
+        } catch (e) {
+            console.error('执行生成答案命令时出错:', e);
+        }
+    });
     
     ipcMain.handle('check-questions', async (event, filename) => {
         console.log(filename)

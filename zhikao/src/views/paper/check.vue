@@ -3,6 +3,7 @@
     <el-button type="primary" size="small" @click="backPage()">返回</el-button>
     <template v-if="userType === 'admin'">
       <el-button type="primary" size="small" @click="generatePaper()">试卷文件生成</el-button>
+      <el-button type="warning" size="small" @click="generateAnswer()">答案生成</el-button>
     </template>
     <el-button type="success" size="small" @click="handleCheck" :disabled="loading">校验</el-button>
     <!-- <el-button type="primary" size="small" @click="generateAnswerSheet()">试卷答题卡生成</el-button> -->
@@ -102,18 +103,18 @@ export default {
         });
       }
     },
-    generateAnswerSheet(){
+    generateAnswer(){
       if(this.ifScore.includes("已达到")){
-        window.electronAPI.check.generateAnswerSheet(this.paperId +'.json');
+        window.electronAPI.check.generateAnswer(this.paperId +'.json');
         this.$message({
-          message: "试卷答题卡生成成功",
+          message: "答案生成成功",
           type: "success",
           showClose: true,
         });
       }
       else{
         this.$message({
-          message: "分数未达标，无法生成试卷",
+          message: "分数未达标，无法生成答案",
           type: "error",
           showClose: true,
         });
